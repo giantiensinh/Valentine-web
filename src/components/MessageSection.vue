@@ -98,14 +98,10 @@ useIntersectionObserver(
     transparent 100%
   );
   overflow: hidden;
-  /* Symmetric padding — chữ không bị cắt ở hai bên */
   padding-inline: var(--section-pad-x);
   padding-block: var(--section-pad-y);
 }
 
-/*
- * Content wrapper: max-width 1400px
- */
 .message-content {
   max-width: var(--content-max-w);
   width: 100%;
@@ -113,31 +109,21 @@ useIntersectionObserver(
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  /* Allow overflow so animated words don't clip */
-  overflow: visible;
 }
 
-/*
- * Display headline: Typography_Display, min 3rem mobile / 5rem desktop
- * overflow: visible ensures italic descenders and stagger animations show fully
- */
 .message-headline {
   font-family: var(--font-display);
-  /* Responsive font size: nhỏ hơn để không tràn viewport */
-  font-size: clamp(var(--text-4xl), 4.5vw, 4.5rem);
+  font-size: clamp(1.5rem, 3.5vw, 4rem);
   font-weight: 300;
   font-style: italic;
-  line-height: 1.2;
+  line-height: 1.25;
   letter-spacing: var(--tracking-tight);
   color: var(--color-ivory);
-  max-width: 100%;
-  /* Ngắt ở khoảng trắng, không ngắt giữa từ */
+  /* Wrap ở khoảng trắng, không cắt giữa từ */
   word-break: keep-all;
   overflow-wrap: normal;
   hyphens: none;
-  /* Reserve space for italic descenders */
   padding-bottom: 0.5rem;
-  overflow: visible;
 }
 
 .word-token {
@@ -148,9 +134,6 @@ useIntersectionObserver(
   display: inline;
 }
 
-/*
- * Subtext: Typography_Body, opacity 0.7
- */
 .message-subtext {
   font-family: var(--font-body);
   font-size: var(--text-base);
@@ -160,9 +143,6 @@ useIntersectionObserver(
   max-width: 40ch;
 }
 
-/*
- * Reduced motion: all text at final visual state immediately
- */
 .message-section--reduced .word-token,
 .message-section--reduced .message-subtext {
   opacity: 1 !important;
@@ -172,34 +152,32 @@ useIntersectionObserver(
 /* ─── Tablet (768–1024px) ─────────────────────── */
 @media (min-width: 768px) and (max-width: 1024px) {
   .message-section {
-    padding-inline-start: clamp(2rem, 5vw, var(--section-pad-x));
-    padding-inline-end: clamp(2rem, 5vw, var(--section-pad-x));
+    padding-inline: clamp(2rem, 5vw, var(--section-pad-x));
   }
 
   .message-headline {
-    font-size: clamp(var(--text-4xl), 5.5vw, var(--text-5xl));
-    max-width: 100%;
+    font-size: clamp(1.75rem, 4vw, 3rem);
   }
 }
 
 /* ─── Mobile (< 768px) ────────────────────────── */
 @media (max-width: 767px) {
   .message-section {
-    padding-inline-start: var(--section-pad-x-narrow);
-    padding-inline-end: var(--section-pad-x-narrow);
+    padding-inline: var(--section-pad-x-narrow);
     padding-block: 4rem;
     align-items: flex-start;
   }
 
   .message-headline {
-    /* 1.75rem đủ to mà không bị ngắt giữa từ trên màn hình 390px */
-    font-size: clamp(1.6rem, 7.5vw, 2.25rem);
-    line-height: 1.3;
+    /* Tính toán: màn 390px - padding 2×16px = 358px dùng được
+       font-size 1.35rem × line 1.25 = ~27px/dòng, câu ~20 từ sẽ wrap ~6 dòng — OK */
+    font-size: clamp(1.25rem, 5.5vw, 1.6rem);
+    line-height: 1.4;
+  }
+
+  .message-subtext {
+    font-size: var(--text-sm);
     max-width: 100%;
-    /* Ngắt ở khoảng trắng, KHÔNG ngắt giữa từ tiếng Việt */
-    word-break: keep-all;
-    overflow-wrap: normal;
-    hyphens: none;
   }
 }
 </style>
