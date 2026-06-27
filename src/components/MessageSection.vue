@@ -8,6 +8,7 @@ import { messageHeadline, messageSubtext } from '../data/content'
 const { isReduced } = useReducedMotion()
 const messageSectionRef = ref<HTMLElement>()
 const wordTokensRef = ref<HTMLElement[]>([])
+const subtextRef = ref<HTMLElement>()
 const hasRevealed = ref(false)
 
 // Split headline into words for stagger animation
@@ -17,8 +18,8 @@ function setWordRef(el: HTMLElement | null, index: number) {
   if (el) wordTokensRef.value[index] = el
 }
 
-// If reduced motion: words are visible immediately (final state) — Req 7.7
-// Otherwise: reveal on IntersectionObserver 50% threshold — Req 7.3
+// If reduced motion: words are visible immediately (final state)
+// Otherwise: reveal on IntersectionObserver 50% threshold
 useIntersectionObserver(
   messageSectionRef,
   ([entry]) => {
@@ -28,17 +29,30 @@ useIntersectionObserver(
     if (isReduced.value) return // already at final state via CSS
 
     const tokens = wordTokensRef.value.filter(Boolean)
-    if (!tokens.length) return
+    const subtext = subtextRef.value
 
-    gsap.from(tokens, {
-      opacity: 0,
-      y: 20,
-      stagger: 0.05,
-      duration: 0.6,
-      ease: 'power2.out',
-    })
+    const tl = gsap.timeline()
+
+    if (tokens.length) {
+      tl.from(tokens, {
+        opacity: 0,
+        y: 20,
+        stagger: 0.05,
+        duration: 0.7,
+        ease: 'power2.out',
+      }, 0)
+    }
+
+    if (subtext) {
+      tl.from(subtext, {
+        opacity: 0,
+        y: 16,
+        duration: 0.6,
+        ease: 'power2.out',
+      }, 0.6)
+    }
   },
-  { threshold: 0.5 }
+  { threshold: 0.3 }
 )
 </script>
 
@@ -50,7 +64,7 @@ useIntersectionObserver(
     aria-label="Message"
   >
     <div class="message-content">
-      <!-- Display headline: italic key words, Typography_Display (Req 7.2) -->
+      <!-- Display headline: italic, word-by-word stagger reveal -->
       <h2 class="message-headline">
         <span
           v-for="(word, i) in headlineWords"
@@ -60,16 +74,16 @@ useIntersectionObserver(
         >{{ word }}<span class="word-space" aria-hidden="true">&nbsp;</span></span>
       </h2>
 
-      <!-- Subtext: Typography_Body, ≤ 3 lines ≤ 80 chars, opacity 0.7 (Req 7.6) -->
-      <p class="message-subtext">{{ messageSubtext }}</p>
+      <!-- Subtext: Typography_Body, ≤ 3 lines ≤ 80 chars, opacity 0.7 -->
+      <p ref="subtextRef" class="message-subtext">{{ messageSubtext }}</p>
     </div>
   </section>
 </template>
 
 <style scoped>
 /*
- * Layout: editorial-manifesto — typography-only full-viewport (Req 7.1)
- * Background: Midnight_Base + radial Crimson gradient at center (Req 7.4)
+ * Layout: editorial-manifesto — typography-only full-viewport
+ * Background: Midnight_Base + radial Crimson gradient at center
  */
 .message-section {
   position: relative;
@@ -79,43 +93,50 @@ useIntersectionObserver(
   justify-content: flex-start;
   background-color: var(--color-midnight-900);
   background-image: radial-gradient(
-    ellipse 40vw 40vw at 50% 50%,
-    hsl(350 65% 42% / 0.15) 0%,
+    ellipse 50vw 50vw at 50% 50%,
+    hsl(350 65% 42% / 0.12) 0%,
     transparent 100%
   );
-  overflow: hidden;
-  /* Asymmetric inline padding: left = 8vw, right = 0 (Req 9.6) */
+  /* Overflow visible so headline with descenders isn't clipped */
+  overflow: visible;
+  /* Asymmetric inline padding */
   padding-inline-start: var(--section-pad-x);
-  padding-inline-end: 0;
+  padding-inline-end: var(--section-pad-x);
   padding-block: var(--section-pad-y);
 }
 
 /*
- * Content wrapper: max-width 1400px, centered with margin-inline: auto (Req 9.6)
+ * Content wrapper: max-width 1400px
  */
 .message-content {
   max-width: var(--content-max-w);
+  width: 100%;
   margin-inline: auto;
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  /* Allow overflow so animated words don't clip */
+  overflow: visible;
 }
 
 /*
- * Display headline: Typography_Display, min 3rem mobile / 5rem desktop (Req 7.2)
- * Italic applied via font-style: italic on entire headline;
- * uses the Cormorant Garamond italic variant (Req 7.2)
+ * Display headline: Typography_Display, min 3rem mobile / 5rem desktop
+ * overflow: visible ensures italic descenders and stagger animations show fully
  */
 .message-headline {
   font-family: var(--font-display);
   font-size: clamp(var(--text-5xl), 6vw, 5rem);
   font-weight: 300;
   font-style: italic;
-  line-height: var(--leading-snug); /* 1.1 — satisfies Req 3.4 for descenders */
+  line-height: var(--leading-snug);
   letter-spacing: var(--tracking-tight);
   color: var(--color-ivory);
-  padding-bottom: 0.25rem; /* reserve for italic descenders (Req 3.4) */
-  max-width: 18ch;
+  /* Critical: visible overflow so word tokens animate without clipping */
+  overflow: visible;
+  /* Reserve space for italic descenders */
+  padding-bottom: 0.5rem;
+  /* Allow natural wrapping — no max-width cap that causes overflow */
+  max-width: 20ch;
 }
 
 .word-token {
@@ -127,8 +148,7 @@ useIntersectionObserver(
 }
 
 /*
- * Subtext: Typography_Body, opacity 0.7, positioned after headline (Req 7.6)
- * ≤ 80 chars ensures ≤ 3 lines at 768px+
+ * Subtext: Typography_Body, opacity 0.7
  */
 .message-subtext {
   font-family: var(--font-body);
@@ -140,17 +160,28 @@ useIntersectionObserver(
 }
 
 /*
- * Reduced motion: all text at final visual state immediately (Req 7.7, 9.9)
+ * Reduced motion: all text at final visual state immediately
  */
-.message-section--reduced .word-token {
-  opacity: 1;
-  transform: none;
+.message-section--reduced .word-token,
+.message-section--reduced .message-subtext {
+  opacity: 1 !important;
+  transform: none !important;
 }
 
-/* ─── Mobile (Req 9.7) ────────────────────────────────────── */
-/*
- * Below 768px: collapse to single column, 1rem padding each side.
- */
+/* ─── Tablet (768–1024px) ─────────────────────── */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .message-section {
+    padding-inline-start: clamp(2rem, 5vw, var(--section-pad-x));
+    padding-inline-end: clamp(2rem, 5vw, var(--section-pad-x));
+  }
+
+  .message-headline {
+    font-size: clamp(var(--text-4xl), 5.5vw, var(--text-5xl));
+    max-width: 100%;
+  }
+}
+
+/* ─── Mobile (< 768px) ────────────────────────── */
 @media (max-width: 767px) {
   .message-section {
     padding-inline-start: var(--section-pad-x-narrow);
@@ -160,7 +191,7 @@ useIntersectionObserver(
   }
 
   .message-headline {
-    font-size: var(--text-5xl); /* 3rem — mobile minimum (Req 7.2) */
+    font-size: var(--text-5xl); /* 3rem — mobile minimum */
     max-width: 100%;
   }
 }

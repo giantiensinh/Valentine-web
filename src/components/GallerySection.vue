@@ -58,11 +58,13 @@ useGalleryScrollEngine(sectionRef, trackRef)
 /*
  * Wrapper: overflow hidden per Req 6.1.
  * The inner track is wider than the viewport; GSAP translates it horizontally.
+ * height: 100dvh gives GSAP ScrollTrigger a known height for the pin.
  */
 .gallery-section {
   position: relative;
   overflow: hidden;
   background-color: var(--color-midnight-900);
+  height: 100dvh;
 }
 
 /*
@@ -116,8 +118,9 @@ useGalleryScrollEngine(sectionRef, trackRef)
 }
 
 /*
- * Scroll hint: bottom-right corner, fades out as scroll progresses.
- * Animation handled by GSAP in useGalleryScrollEngine.
+ * Scroll hint: fixed bottom-right while section is pinned.
+ * GSAP fades it out as the user starts scrolling.
+ * Uses position: absolute relative to .gallery-section (which is pinned/position:relative).
  */
 .gallery-hint {
   position: absolute;
@@ -128,6 +131,8 @@ useGalleryScrollEngine(sectionRef, trackRef)
   gap: 0.5rem;
   z-index: var(--z-content);
   pointer-events: none;
+  /* Ensure it sits above the track */
+  top: auto;
 }
 
 .gallery-hint-text {

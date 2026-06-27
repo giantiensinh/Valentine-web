@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useReducedMotion } from './composables/useReducedMotion'
 import NavBar from './components/NavBar.vue'
 import HeroSection from './components/HeroSection.vue'
@@ -9,6 +11,8 @@ import StorySection from './components/StorySection.vue'
 import GallerySection from './components/GallerySection.vue'
 import MessageSection from './components/MessageSection.vue'
 import ClosingSection from './components/ClosingSection.vue'
+
+gsap.registerPlugin(ScrollTrigger)
 
 // Reduced motion preference — passed down to all animated sections
 const { isReduced } = useReducedMotion()
@@ -25,6 +29,24 @@ function onBloomTrigger() {
 // heroSectionEl: computed DOM element exposed via defineExpose, passed to NavBar
 const heroRef = ref<InstanceType<typeof HeroSection>>()
 const heroSectionEl = computed(() => heroRef.value?.sectionRef ?? null)
+
+// Global ScrollTrigger refresh after everything has rendered and loaded
+onMounted(() => {
+  // Refresh on window load (all images decoded)
+  if (document.readyState === 'complete') {
+    ScrollTrigger.refresh()
+  } else {
+    window.addEventListener('load', () => ScrollTrigger.refresh(), { once: true })
+  }
+
+  // Refresh after web fonts settle
+  document.fonts.ready.then(() => {
+    // Small delay to let any final layout shifts complete
+    requestAnimationFrame(() => {
+      ScrollTrigger.refresh()
+    })
+  })
+})
 </script>
 
 <template>

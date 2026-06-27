@@ -11,6 +11,10 @@ gsap.registerPlugin(ScrollTrigger)
  * Pins the hero section for 150% viewport height.
  * Fires onBloomTrigger exactly once when scroll progress >= 0.8.
  * No-ops when prefers-reduced-motion: reduce.
+ *
+ * Key fixes:
+ * - anticipatePin: 1 prevents the scroll position jump on pin start
+ * - ScrollTrigger.refresh() called after all images load ensures correct geometry
  */
 export function useHeroScrollEngine(
     sectionRef: Ref<HTMLElement | undefined>,
@@ -29,6 +33,7 @@ export function useHeroScrollEngine(
                 start: 'top top',
                 end: '+=150%',
                 pin: true,
+                anticipatePin: 1,
                 onUpdate(self) {
                     if (self.progress >= 0.8 && !bloomFired) {
                         bloomFired = true
@@ -37,6 +42,19 @@ export function useHeroScrollEngine(
                 },
             })
         }, sectionRef.value)
+
+        // Refresh ScrollTrigger after all page images finish loading
+        // so pin calculations use correct final geometry.
+        if (document.readyState === 'complete') {
+            ScrollTrigger.refresh()
+        } else {
+            window.addEventListener('load', () => ScrollTrigger.refresh(), { once: true })
+        }
+
+        // Additional refresh after fonts settle (web fonts can shift layout)
+        document.fonts.ready.then(() => {
+            ScrollTrigger.refresh()
+        })
     })
 
     onUnmounted(() => {
@@ -48,6 +66,7 @@ export function useHeroScrollEngine(
 /**
  * Implements sticky-stack exit animation for story scenes.
  * Each scene exits with scale 1→0.92 and opacity 1→0 as the next scene scrolls in.
+ * Text within each scene fades in when the scene becomes active.
  * No-ops when prefers-reduced-motion: reduce.
  */
 export function useStoryScrollEngine(
@@ -62,8 +81,25 @@ export function useStoryScrollEngine(
 
         ctx = gsap.context(() => {
             sceneRefs.value.forEach((scene, i) => {
+                // Fade in scene text when scene enters viewport
+                const sceneText = scene.querySelector<HTMLElement>('.scene-text')
+                if (sceneText) {
+                    gsap.from(sceneText, {
+                        opacity: 0,
+                        y: 30,
+                        duration: 0.8,
+                        ease: 'power2.out',
+                        scrollTrigger: {
+                            trigger: scene,
+                            start: 'top 60%',
+                            toggleActions: 'play none none none',
+                        },
+                    })
+                }
+
                 // Last scene has no exit animation
                 if (i === sceneRefs.value.length - 1) return
+
                 const nextScene = sceneRefs.value[i + 1]
                 gsap.to(scene, {
                     scale: 0.92,
@@ -114,6 +150,7 @@ export function useGalleryScrollEngine(
                     start: 'top top',
                     end: () => `+=${getDistance()}`,
                     pin: true,
+                    anticipatePin: 1,
                     scrub: 1,
                     invalidateOnRefresh: true,
                 },
@@ -135,10 +172,16 @@ export function useGalleryScrollEngine(
             }
         }, sectionRef.value)
 
-        // Refresh after fonts load to ensure correct scrollWidth calculation
+        // Refresh after fonts and images load to ensure correct scrollWidth calculation
         document.fonts.ready.then(() => {
             ScrollTrigger.refresh()
         })
+
+        if (document.readyState === 'complete') {
+            ScrollTrigger.refresh()
+        } else {
+            window.addEventListener('load', () => ScrollTrigger.refresh(), { once: true })
+        }
     })
 
     onUnmounted(() => {

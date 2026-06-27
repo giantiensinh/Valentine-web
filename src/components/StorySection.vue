@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import StoryScene from './StoryScene.vue'
 import { storyScenes } from '../data/content'
 import { useStoryScrollEngine } from '../composables/useScrollEngine'
