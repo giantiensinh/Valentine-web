@@ -97,11 +97,9 @@ useIntersectionObserver(
     hsl(350 65% 42% / 0.12) 0%,
     transparent 100%
   );
-  /* Overflow visible so headline with descenders isn't clipped */
-  overflow: visible;
-  /* Asymmetric inline padding */
-  padding-inline-start: var(--section-pad-x);
-  padding-inline-end: var(--section-pad-x);
+  overflow: hidden;
+  /* Symmetric padding — chữ không bị cắt ở hai bên */
+  padding-inline: var(--section-pad-x);
   padding-block: var(--section-pad-y);
 }
 
@@ -125,18 +123,22 @@ useIntersectionObserver(
  */
 .message-headline {
   font-family: var(--font-display);
-  font-size: clamp(var(--text-5xl), 6vw, 5rem);
+  /* Responsive font size: nhỏ hơn để không tràn viewport */
+  font-size: clamp(var(--text-4xl), 4.5vw, 4.5rem);
   font-weight: 300;
   font-style: italic;
-  line-height: var(--leading-snug);
+  line-height: 1.2;
   letter-spacing: var(--tracking-tight);
   color: var(--color-ivory);
-  /* Critical: visible overflow so word tokens animate without clipping */
-  overflow: visible;
+  /* Allow natural wrapping — no fixed max-width that clips long Vietnamese text */
+  max-width: 100%;
+  /* Ensure long words wrap, don't overflow */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   /* Reserve space for italic descenders */
   padding-bottom: 0.5rem;
-  /* Allow natural wrapping — no max-width cap that causes overflow */
-  max-width: 20ch;
+  /* Critical: visible overflow so word tokens animate without clipping */
+  overflow: visible;
 }
 
 .word-token {

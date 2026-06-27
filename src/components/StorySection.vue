@@ -10,8 +10,13 @@ const sceneRefs = ref<HTMLElement[]>([])
 const activeScene = ref(0)
 const isSectionVisible = ref(false)
 
-function setSceneRef(el: HTMLElement | null, index: number) {
-  if (el) sceneRefs.value[index] = el
+function setSceneRef(el: unknown, index: number) {
+  // el có thể là Vue component instance hoặc raw HTMLElement
+  // unwrap $el nếu là component
+  const domEl = el && typeof (el as any).$el !== 'undefined'
+    ? (el as any).$el as HTMLElement
+    : el as HTMLElement | null
+  if (domEl) sceneRefs.value[index] = domEl
 }
 
 // Track section visibility — dots only show while story is in viewport
@@ -48,7 +53,7 @@ useStoryScrollEngine(sectionRef, sceneRefs)
     <StoryScene
       v-for="(scene, i) in storyScenes"
       :key="scene.id"
-      :ref="(el) => setSceneRef(el as HTMLElement | null, i)"
+      :ref="(el) => setSceneRef(el, i)"
       :scene="scene"
       :index="i"
     />

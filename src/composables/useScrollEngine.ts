@@ -76,11 +76,24 @@ export function useStoryScrollEngine(
     const { isReduced } = useReducedMotion()
     let ctx: gsap.Context | null = null
 
+    // Helper: resolve actual DOM element from either a raw HTMLElement
+    // or a Vue component instance (which exposes the root via .$el)
+    function resolveEl(ref: HTMLElement): HTMLElement | null {
+        if (!ref) return null
+        // Vue component instance has $el
+        if (typeof (ref as any).$el !== 'undefined') return (ref as any).$el as HTMLElement
+        // Already a raw DOM element
+        return ref
+    }
+
     onMounted(() => {
         if (isReduced.value || !sectionRef.value) return
 
         ctx = gsap.context(() => {
-            sceneRefs.value.forEach((scene, i) => {
+            sceneRefs.value.forEach((sceneRef, i) => {
+                const scene = resolveEl(sceneRef)
+                if (!scene) return
+
                 // Fade in scene text when scene enters viewport
                 const sceneText = scene.querySelector<HTMLElement>('.scene-text')
                 if (sceneText) {
@@ -100,13 +113,15 @@ export function useStoryScrollEngine(
                 // Last scene has no exit animation
                 if (i === sceneRefs.value.length - 1) return
 
-                const nextScene = sceneRefs.value[i + 1]
+                const nextSceneEl = resolveEl(sceneRefs.value[i + 1])
+                if (!nextSceneEl) return
+
                 gsap.to(scene, {
                     scale: 0.92,
                     opacity: 0,
                     ease: 'none',
                     scrollTrigger: {
-                        trigger: nextScene,
+                        trigger: nextSceneEl,
                         start: 'top bottom',
                         end: 'top top',
                         scrub: true,
