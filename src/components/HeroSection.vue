@@ -368,31 +368,52 @@ onMounted(() => {
     flex-direction: column;
     height: 100svh;
     height: 100dvh;
-    padding-left: var(--section-pad-x-narrow);
-    padding-right: var(--section-pad-x-narrow);
+    /* Đảm bảo override padding desktop */
+    padding-left: var(--section-pad-x-narrow) !important;
+    padding-right: var(--section-pad-x-narrow) !important;
     padding-top: 5rem;
     padding-bottom: 4rem;
-    gap: 2rem;
+    gap: 1.5rem;
     overflow: hidden;
   }
 
   .hero-text {
     padding-right: 0;
     flex: 0 0 auto;
-    gap: 1.25rem;
+    gap: 1rem;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
   }
 
   .hero-headline {
-    font-size: clamp(2.25rem, 10vw, var(--text-5xl));
+    /* 8vw trên 390px = ~31px = ~1.95rem — vừa đủ để không tràn */
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+    line-height: 1.05;
+    /* Ngắt dòng ở khoảng trắng, không ngắt giữa từ */
+    word-break: keep-all;
+    overflow-wrap: normal;
+    white-space: normal;
+  }
+
+  .hero-subtext {
+    font-size: 0.875rem;
+    max-width: 100%;
+  }
+
+  .hero-cta {
+    padding: 0.75rem 1.75rem;
+    font-size: 0.7rem;
   }
 
   .hero-asset {
     position: relative;
     flex: 1 1 auto;
     min-height: 0;
-    width: 100%;
+    /* Stretch full width phá padding để ảnh tràn đẹp */
     margin-left: calc(-1 * var(--section-pad-x-narrow));
-    margin-right: calc(-1 * var(--section-pad-x-narrow));
     width: calc(100% + 2 * var(--section-pad-x-narrow));
   }
 

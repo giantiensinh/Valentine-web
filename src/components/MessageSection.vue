@@ -130,14 +130,13 @@ useIntersectionObserver(
   line-height: 1.2;
   letter-spacing: var(--tracking-tight);
   color: var(--color-ivory);
-  /* Allow natural wrapping — no fixed max-width that clips long Vietnamese text */
   max-width: 100%;
-  /* Ensure long words wrap, don't overflow */
-  word-wrap: break-word;
-  overflow-wrap: break-word;
+  /* Ngắt ở khoảng trắng, không ngắt giữa từ */
+  word-break: keep-all;
+  overflow-wrap: normal;
+  hyphens: none;
   /* Reserve space for italic descenders */
   padding-bottom: 0.5rem;
-  /* Critical: visible overflow so word tokens animate without clipping */
   overflow: visible;
 }
 
@@ -193,8 +192,14 @@ useIntersectionObserver(
   }
 
   .message-headline {
-    font-size: var(--text-5xl); /* 3rem — mobile minimum */
+    /* 1.75rem đủ to mà không bị ngắt giữa từ trên màn hình 390px */
+    font-size: clamp(1.6rem, 7.5vw, 2.25rem);
+    line-height: 1.3;
     max-width: 100%;
+    /* Ngắt ở khoảng trắng, KHÔNG ngắt giữa từ tiếng Việt */
+    word-break: keep-all;
+    overflow-wrap: normal;
+    hyphens: none;
   }
 }
 </style>
