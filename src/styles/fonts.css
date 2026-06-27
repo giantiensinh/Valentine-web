@@ -1,0 +1,12 @@
+/* src/styles/fonts.css */
+
+/*
+ * Cormorant Garamond is loaded via Google Fonts CDN in index.html
+ * (preconnect + stylesheet link) for reliability without local font files.
+ *
+ * Satoshi is loaded via Fontshare CDN below.
+ * If self-hosted files are placed in /public/fonts/, replace these @import
+ * rules with @font-face declarations pointing to the .woff2 files.
+ */
+
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500&display=swap');
