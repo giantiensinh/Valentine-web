@@ -75,20 +75,16 @@ useGalleryScrollEngine(sectionRef, trackRef)
 .gallery-track {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
-  gap: 2rem;
-  padding: var(--section-pad-y) var(--section-pad-x);
-  /* Expand to fit all items side-by-side */
+  align-items: center;
+  gap: 2.5rem;
+  padding: 3rem var(--section-pad-x);
   width: max-content;
+  height: 100%;
 }
 
-/*
- * Each gallery item: tall enough to feel cinematic.
- * Increased from 70vh to fill the section properly.
- */
 .gallery-track :deep(.gallery-item) {
-  height: 78vh;
-  min-height: 500px;
+  height: 82vh;
+  min-height: 520px;
   flex-shrink: 0;
 }
 

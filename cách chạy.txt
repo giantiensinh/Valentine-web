@@ -1,4 +1,3 @@
 cd e:\Valentine
 npm install
 npm run dev
-tiếp

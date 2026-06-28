@@ -173,31 +173,47 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* ─── Hero Layout ────────────────────────────────── */
+/* ─── Hero Layout — full width, heart as background ── */
 .hero-section {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 52%) 1fr;
-  grid-template-rows: 1fr;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   height: 100svh;
   height: 100dvh;
   padding-top: clamp(4rem, 8vw, 6rem);
   padding-bottom: var(--section-pad-y);
   padding-left: var(--section-pad-x);
-  padding-right: 0;
+  padding-right: var(--section-pad-x);
   background-color: var(--color-midnight-900);
   overflow: hidden;
 }
 
-/* ─── Text Column ─────────────────────────────────── */
+/* ─── Heart canvas: absolute background layer ─────── */
+.hero-heart-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  /* fade right side so text is readable */
+  mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.15) 30%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.8) 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.15) 30%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.8) 100%);
+}
+
+.heart-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ─── Text column: full width, z above heart ─────── */
 .hero-text {
+  position: relative;
+  z-index: var(--z-content);
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: 1.75rem;
-  z-index: var(--z-content);
-  padding-right: 2rem;
-  align-self: center;
+  max-width: 720px;
 }
 
 .hero-eyebrow {
@@ -207,21 +223,18 @@ onMounted(() => {
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--color-crimson-light);
-  /* Always visible — don't rely on GSAP for initial state */
   opacity: 1;
 }
 
 .hero-headline {
   font-family: var(--font-display);
-  font-size: clamp(2.8rem, 6vw, 5.5rem);
+  /* Now has full viewport width — can be large again */
+  font-size: clamp(3rem, 7vw, 6.5rem);
   font-weight: 300;
-  line-height: 1.0;
+  line-height: 0.95;
   letter-spacing: var(--tracking-tight);
   color: var(--color-ivory);
-  overflow: visible;
   padding-bottom: 0.25rem;
-  word-break: keep-all;
-  overflow-wrap: normal;
   background: linear-gradient(
     105deg,
     var(--color-ivory) 0%,
@@ -251,7 +264,7 @@ onMounted(() => {
   font-size: var(--text-lg);
   line-height: var(--leading-normal);
   color: var(--color-ivory-dim);
-  max-width: 38ch;
+  max-width: 44ch;
   opacity: 1;
 }
 
@@ -282,29 +295,13 @@ onMounted(() => {
   transform: translateY(-2px) scale(1.03);
 }
 
-.hero-cta:active {
-  transform: scale(0.97);
-}
+.hero-cta:active { transform: scale(0.97); }
 
-/* ─── Heart Particle Panel ─────────────────────────── */
-.hero-heart-panel {
-  position: relative;
-  overflow: hidden;
-  align-self: stretch;
-}
-
-.heart-canvas {
-  width: 100%;
-  height: 100%;
-  display: block;
-  cursor: crosshair;
-}
-
-/* ─── Scroll Indicator ──────────────────────────────── */
+/* ─── Scroll Indicator ────────────────────────────── */
 .hero-scroll-indicator {
   position: absolute;
   bottom: 2rem;
-  left: 27.5%;          /* center of the text column (55% / 2) */
+  left: 50%;
   transform: translateX(-50%);
   z-index: var(--z-content);
   color: var(--color-ivory);
@@ -320,79 +317,62 @@ onMounted(() => {
 
 .hero-scroll-indicator:hover { opacity: 0.9; }
 
-.scroll-arrow {
-  animation: arrow-bounce 2s ease-in-out infinite;
-}
+.scroll-arrow { animation: arrow-bounce 2s ease-in-out infinite; }
 
 @keyframes arrow-bounce {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(6px); }
 }
 
-/* ─── Responsive: Tablet ─────────────────── */
-@media (min-width: 768px) and (max-width: 1024px) {
-  .hero-section {
-    grid-template-columns: 1fr 1fr;
-    padding-left: clamp(2rem, 4vw, var(--section-pad-x));
-  }
-  .hero-headline { font-size: clamp(3rem, 6vw, 5rem); }
-  .hero-text { padding-right: 1.5rem; }
-}
-
-/* ─── Responsive: Mobile ─────────────────────────────── */
-@media (max-width: 767px) {
-  .hero-section {
-    display: flex;
-    flex-direction: column;
-    height: 100svh;
-    height: 100dvh;
-    padding-left: var(--section-pad-x-narrow) !important;
-    padding-right: var(--section-pad-x-narrow) !important;
-    padding-top: 5rem;
-    padding-bottom: 4rem;
-    gap: 1.5rem;
-    overflow: hidden;
-  }
-  .hero-text { padding-right: 0; flex: 0 0 auto; gap: 1rem; }
-  .hero-eyebrow { font-size: 0.65rem; letter-spacing: 0.1em; }
-  .hero-headline {
-    font-size: clamp(2rem, 8vw, 3rem);
-    line-height: 1.0;
-    word-break: keep-all;
-  }
-  .hero-subtext { font-size: var(--text-base); max-width: 100%; }
-  .hero-cta { padding: 0.875rem 2rem; font-size: 0.75rem; }
-  .hero-heart-panel {
-    flex: 1 1 auto;
-    min-height: 0;
-    margin-left: calc(-1 * var(--section-pad-x-narrow));
-    width: calc(100% + 2 * var(--section-pad-x-narrow));
-  }
-  .hero-scroll-indicator { bottom: 1rem; left: 50%; }
-}
-
-/* ─── Reduced Motion ─────────── */
-@media (prefers-reduced-motion: reduce) {
-  .scroll-arrow { animation: none; }
-  .hero-headline { animation: none; }
-}
-
-/* ─── Cursor glow ────────────────────────────────────── */
+/* ─── Cursor glow ─────────────────────────────────── */
 .hero-glow {
   position: absolute;
   width: 400px;
   height: 400px;
   border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    hsl(350 65% 42% / 0.22) 0%,
-    hsl(320 55% 35% / 0.08) 50%,
-    transparent 70%
-  );
+  background: radial-gradient(circle, hsl(350 65% 42% / 0.2) 0%, transparent 70%);
   pointer-events: none;
   transform: translate(-50%, -50%);
   transition: left 0.08s ease, top 0.08s ease;
-  z-index: 0;
+  z-index: 2;
   will-change: left, top;
+}
+
+/* ─── Tablet ──────────────────────────────────────── */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .hero-section { padding-left: clamp(2rem, 4vw, var(--section-pad-x)); padding-right: clamp(2rem, 4vw, var(--section-pad-x)); }
+  .hero-headline { font-size: clamp(2.5rem, 5vw, 4.5rem); }
+}
+
+/* ─── Mobile ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  .hero-section {
+    padding-left: var(--section-pad-x-narrow);
+    padding-right: var(--section-pad-x-narrow);
+    padding-top: 5rem;
+    padding-bottom: 4rem;
+    gap: 0;
+  }
+  .hero-text { gap: 1rem; max-width: 100%; }
+  .hero-eyebrow { font-size: 0.65rem; }
+  .hero-headline {
+    font-size: clamp(2.2rem, 9vw, 3rem);
+    line-height: 1.0;
+    word-break: keep-all;
+  }
+  .hero-subtext { font-size: var(--text-base); max-width: 100%; }
+  .hero-cta { padding: 0.875rem 2rem; font-size: 0.75rem; }
+  /* On mobile, heart is fully transparent on left side */
+  .hero-heart-panel {
+    mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.7) 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.7) 100%);
+  }
+  .hero-scroll-indicator { bottom: 1rem; }
+}
+
+/* ─── Reduced Motion ──────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-arrow { animation: none; }
+  .hero-headline { animation: none; }
 }
 </style>
