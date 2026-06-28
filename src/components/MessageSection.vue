@@ -41,7 +41,6 @@ useIntersectionObserver(
 )
 
 // Hiệu ứng trái tim nổi lên — tạo động bằng GSAP
-let heartCtx: gsap.Context | null = null
 
 function spawnHeart() {
   if (!heartsRef.value || isReduced.value) return
@@ -107,7 +106,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (spawnInterval) clearInterval(spawnInterval)
-  heartCtx?.revert()
 })
 </script>
 

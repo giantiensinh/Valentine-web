@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { gsap } from 'gsap'
 import { useReducedMotion } from '../composables/useReducedMotion'
 import { useHeroScrollEngine } from '../composables/useScrollEngine'
+import MeshGradient from './MeshGradient.vue'
 
 const props = defineProps<{
   isReduced?: boolean
@@ -94,6 +95,9 @@ onMounted(() => {
     aria-label="Hero"
     @mousemove="onMouseMove"
   >
+    <!-- Animated mesh gradient background -->
+    <MeshGradient />
+
     <!-- Cursor glow effect -->
     <div
       v-if="!isReduced"
@@ -293,6 +297,8 @@ onMounted(() => {
 
 .hero-cta:hover {
   background-color: var(--color-crimson-dark);
+  box-shadow: 0 0 20px hsl(350 65% 42% / 0.5), 0 4px 12px hsl(350 65% 30% / 0.3);
+  transform: translateY(-1px) scale(1.02);
 }
 
 .hero-cta:active {

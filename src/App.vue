@@ -3,6 +3,9 @@ import { ref, computed, onMounted } from 'vue'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useReducedMotion } from './composables/useReducedMotion'
+import LoadingScreen from './components/LoadingScreen.vue'
+import CursorEffect from './components/CursorEffect.vue'
+import ParallaxHearts from './components/ParallaxHearts.vue'
 import NavBar from './components/NavBar.vue'
 import HeroSection from './components/HeroSection.vue'
 import ParticleField from './components/ParticleField.vue'
@@ -14,52 +17,66 @@ import ClosingSection from './components/ClosingSection.vue'
 
 gsap.registerPlugin(ScrollTrigger)
 
-// Reduced motion preference — passed down to all animated sections
 const { isReduced } = useReducedMotion()
 
-// bloomPlaying ref: set to true by HeroSection's scroll engine callback
-// passed to BloomEffect as :play="bloomPlaying"
-const bloomPlaying = ref(false)
+// Loading screen — hidden after LoadingScreen emits 'done'
+const isLoading = ref(true)
+function onLoadingDone() {
+  isLoading.value = false
+}
 
+const bloomPlaying = ref(false)
 function onBloomTrigger() {
   bloomPlaying.value = true
 }
 
-// heroRef: component instance reference for HeroSection
-// heroSectionEl: computed DOM element exposed via defineExpose, passed to NavBar
 const heroRef = ref<InstanceType<typeof HeroSection>>()
 const heroSectionEl = computed(() => heroRef.value?.sectionRef ?? null)
 
-// Global ScrollTrigger refresh after everything has rendered and loaded
 onMounted(() => {
-  // Refresh on window load (all images decoded)
   if (document.readyState === 'complete') {
     ScrollTrigger.refresh()
   } else {
     window.addEventListener('load', () => ScrollTrigger.refresh(), { once: true })
   }
-
-  // Refresh after web fonts settle
   document.fonts.ready.then(() => {
-    // Small delay to let any final layout shifts complete
-    requestAnimationFrame(() => {
-      ScrollTrigger.refresh()
-    })
+    requestAnimationFrame(() => ScrollTrigger.refresh())
   })
 })
 </script>
 
 <template>
+  <!-- Global SVG filter for grain/noise film effect -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <filter id="grain">
+        <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+        <feColorMatrix type="saturate" values="0" />
+        <feBlend in="SourceGraphic" mode="overlay" result="blend" />
+        <feComposite in="blend" in2="SourceGraphic" operator="in" />
+      </filter>
+    </defs>
+  </svg>
+
+  <!-- Loading screen — sits on top of everything -->
+  <Transition name="loading-out">
+    <LoadingScreen v-if="isLoading" @done="onLoadingDone" />
+  </Transition>
+
+  <!-- Main app: rendered but invisible until loading done -->
   <div
     id="app-root"
     :data-reduced="isReduced"
+    :class="{ 'app--loading': isLoading }"
   >
-    <!-- 1. NavBar: position fixed, z-index: var(--z-nav) -->
-    <!-- heroSectionEl is the raw HTMLElement for IntersectionObserver -->
+    <!-- Global cursor effect (desktop only) -->
+    <CursorEffect />
+
+    <!-- Parallax floating hearts (global, 3 depth layers) -->
+    <ParallaxHearts />
+
     <NavBar :heroRef="heroSectionEl" />
 
-    <!-- 2. HeroSection: layout: pinned-scroll-hero -->
-    <!-- ParticleField injected via named slot "particles" -->
     <HeroSection
       ref="heroRef"
       :isReduced="isReduced"
@@ -70,20 +87,10 @@ onMounted(() => {
       </template>
     </HeroSection>
 
-    <!-- 3. BloomEffect: triggered by hero scroll progress >= 80% -->
-    <!-- Layout: stands alone between hero and story (different from both) -->
     <BloomEffect :play="bloomPlaying" :reduced="isReduced" />
-
-    <!-- 4. StorySection: layout: sticky-stack -->
     <StorySection :isReduced="isReduced" />
-
-    <!-- 5. GallerySection: layout: horizontal-scroll-hijack -->
     <GallerySection :reduced="isReduced" />
-
-    <!-- 6. MessageSection: layout: editorial-manifesto -->
     <MessageSection :isReduced="isReduced" />
-
-    <!-- 7. ClosingSection: layout: minimal-cta (includes FooterBar) -->
     <ClosingSection />
   </div>
 </template>
@@ -91,5 +98,19 @@ onMounted(() => {
 <style scoped>
 #app-root {
   min-height: 100dvh;
+  transition: opacity 0.3s ease;
+}
+
+/* Keep app invisible during loading to prevent flash */
+#app-root.app--loading {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-out-leave-active {
+  transition: opacity 0.4s ease;
+}
+.loading-out-leave-to {
+  opacity: 0;
 }
 </style>
