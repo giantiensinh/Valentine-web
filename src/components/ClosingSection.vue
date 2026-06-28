@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { gsap } from 'gsap'
 import { useIntersectionObserver } from '@vueuse/core'
 import { useReducedMotion } from '../composables/useReducedMotion'
@@ -8,9 +8,65 @@ const { isReduced } = useReducedMotion()
 const sectionRef = ref<HTMLElement>()
 const ctaRef = ref<HTMLElement>()
 const closingTextRef = ref<HTMLElement>()
+const canvasRef = ref<HTMLCanvasElement>()
 const hasFadedIn = ref(false)
 
-// Fade in text then button from bottom — fires once
+// ─── Aurora canvas ────────────────────────────────
+let rafId: number | null = null
+let t = 0
+
+function initAurora() {
+  const canvas = canvasRef.value
+  if (!canvas || isReduced.value) return
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+
+  function resize() {
+    if (!canvas) return
+    canvas.width = canvas.offsetWidth
+    canvas.height = canvas.offsetHeight
+  }
+
+  resize()
+  window.addEventListener('resize', resize)
+
+  function draw() {
+    if (!canvas || !ctx) return
+    const w = canvas.width
+    const h = canvas.height
+    ctx.clearRect(0, 0, w, h)
+    t += 0.004
+
+    // 3 slow-moving aurora blobs
+    const blobs = [
+      { x: 0.35 + Math.sin(t * 0.7) * 0.15, y: 0.5 + Math.cos(t * 0.5) * 0.2, r: 0.45, hue: 350, sat: 65, lig: 35, a: 0.13 },
+      { x: 0.65 + Math.cos(t * 0.6) * 0.12, y: 0.45 + Math.sin(t * 0.8) * 0.15, r: 0.38, hue: 320, sat: 55, lig: 30, a: 0.10 },
+      { x: 0.5  + Math.sin(t * 0.9) * 0.1,  y: 0.6  + Math.cos(t * 0.4) * 0.1,  r: 0.30, hue: 10,  sat: 70, lig: 40, a: 0.08 },
+    ]
+
+    for (const b of blobs) {
+      const grd = ctx.createRadialGradient(
+        b.x * w, b.y * h, 0,
+        b.x * w, b.y * h, b.r * Math.max(w, h)
+      )
+      grd.addColorStop(0, `hsla(${b.hue}, ${b.sat}%, ${b.lig}%, ${b.a})`)
+      grd.addColorStop(1, `hsla(${b.hue}, ${b.sat}%, ${b.lig}%, 0)`)
+      ctx.fillStyle = grd
+      ctx.fillRect(0, 0, w, h)
+    }
+
+    rafId = requestAnimationFrame(draw)
+  }
+
+  rafId = requestAnimationFrame(draw)
+
+  return () => {
+    window.removeEventListener('resize', resize)
+    if (rafId !== null) cancelAnimationFrame(rafId)
+  }
+}
+
+// ─── Entrance animation ───────────────────────────
 useIntersectionObserver(
   sectionRef,
   ([entry]) => {
@@ -18,37 +74,24 @@ useIntersectionObserver(
     hasFadedIn.value = true
 
     const tl = gsap.timeline()
-
     if (closingTextRef.value) {
-      tl.from(closingTextRef.value, {
-        opacity: 0,
-        y: 20,
-        duration: 0.7,
-        ease: 'power2.out',
-      }, 0)
+      tl.from(closingTextRef.value, { opacity: 0, y: 24, duration: 0.8, ease: 'power2.out' }, 0)
     }
-
     if (ctaRef.value) {
-      tl.from(ctaRef.value, {
-        opacity: 0,
-        y: 20,
-        duration: 0.7,
-        ease: 'power2.out',
-      }, 0.25)
+      tl.from(ctaRef.value, { opacity: 0, y: 24, duration: 0.8, ease: 'power2.out' }, 0.3)
     }
   },
   { threshold: 0.3 }
 )
 
-// CTA hover fill animation: fill from nearest edge
+// ─── CTA hover fill ───────────────────────────────
 function onCtaMouseEnter(e: MouseEvent) {
   if (!ctaRef.value) return
   const rect = ctaRef.value.getBoundingClientRect()
   const fromLeft = e.clientX - rect.left < rect.width / 2
   const fillEl = ctaRef.value.querySelector<HTMLElement>('.cta-fill')
   if (!fillEl) return
-  gsap.fromTo(
-    fillEl,
+  gsap.fromTo(fillEl,
     { scaleX: 0, transformOrigin: fromLeft ? 'left center' : 'right center' },
     { scaleX: 1, duration: 0.28, ease: 'power2.out' }
   )
@@ -59,6 +102,42 @@ function onCtaMouseLeave() {
   if (!fillEl) return
   gsap.to(fillEl, { scaleX: 0, duration: 0.2, ease: 'power2.in' })
 }
+
+// ─── CTA click ripple ─────────────────────────────
+function onCtaClick(e: MouseEvent) {
+  if (!ctaRef.value || isReduced.value) return
+  const rect = ctaRef.value.getBoundingClientRect()
+  const ripple = document.createElement('span')
+  ripple.className = 'cta-ripple'
+  ripple.style.cssText = `
+    position: absolute;
+    left: ${e.clientX - rect.left}px;
+    top: ${e.clientY - rect.top}px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: hsl(48 22% 92% / 0.4);
+    transform: translate(-50%, -50%) scale(0);
+    pointer-events: none;
+  `
+  ctaRef.value.appendChild(ripple)
+  gsap.to(ripple, {
+    scale: 18,
+    opacity: 0,
+    duration: 0.6,
+    ease: 'power2.out',
+    onComplete: () => ripple.remove(),
+  })
+}
+
+let cleanupAurora: (() => void) | undefined
+
+onMounted(() => {
+  cleanupAurora = initAurora()
+})
+
+onUnmounted(() => {
+  cleanupAurora?.()
+})
 </script>
 
 <template>
@@ -67,24 +146,30 @@ function onCtaMouseLeave() {
     class="closing-section"
     aria-label="Closing"
   >
+    <!-- Aurora animated background -->
+    <canvas
+      v-if="!isReduced"
+      ref="canvasRef"
+      class="aurora-canvas"
+      aria-hidden="true"
+    />
+
     <div class="closing-content">
-      <!-- Text node: ≤ 10 words -->
       <p ref="closingTextRef" class="closing-text">Mãi mãi, chỉ là em thôi.</p>
 
-      <!-- CTA: ≤ 3 words label, hover fill from nearest edge -->
       <button
         ref="ctaRef"
         class="closing-cta"
         type="button"
         @mouseenter="onCtaMouseEnter"
         @mouseleave="onCtaMouseLeave"
+        @click="onCtaClick"
       >
         <span class="cta-fill" aria-hidden="true"></span>
         <span class="cta-label">Gửi yêu thương</span>
       </button>
     </div>
 
-    <!-- Footer: copyright only -->
     <footer class="site-footer">
       <p class="footer-copyright">&copy; 2025 Valentine</p>
     </footer>
@@ -92,11 +177,6 @@ function onCtaMouseLeave() {
 </template>
 
 <style scoped>
-/*
- * Layout: minimal-cta
- * min-height: 100dvh
- * Background: Midnight_Base
- */
 .closing-section {
   position: relative;
   min-height: 100dvh;
@@ -105,15 +185,24 @@ function onCtaMouseLeave() {
   align-items: flex-start;
   justify-content: center;
   background-color: var(--color-midnight-900);
-  padding-inline-start: var(--section-pad-x);
-  padding-inline-end: var(--section-pad-x);
+  padding-inline: var(--section-pad-x);
   padding-block: var(--section-pad-y);
+  overflow: hidden;
 }
 
-/*
- * Content wrapper
- */
+/* Aurora canvas: fills entire section behind content */
+.aurora-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .closing-content {
+  position: relative;
+  z-index: 1;
   max-width: var(--content-max-w);
   width: 100%;
   margin-inline: auto;
@@ -123,12 +212,9 @@ function onCtaMouseLeave() {
   align-items: flex-start;
 }
 
-/*
- * Text node: font-size ≤ 14px, ≤ 10 words
- */
 .closing-text {
   font-family: var(--font-body);
-  font-size: var(--text-sm); /* 0.875rem = 14px */
+  font-size: var(--text-sm);
   line-height: var(--leading-normal);
   color: var(--color-ivory);
   opacity: 0.7;
@@ -136,9 +222,6 @@ function onCtaMouseLeave() {
   text-transform: uppercase;
 }
 
-/*
- * CTA button: ≤ 3 words, hover fill from nearest edge
- */
 .closing-cta {
   position: relative;
   display: inline-flex;
@@ -146,7 +229,7 @@ function onCtaMouseLeave() {
   justify-content: center;
   padding: 1rem 3rem;
   border: 1px solid var(--color-crimson);
-  border-radius: 0; /* all-sharp */
+  border-radius: 0;
   background: transparent;
   color: var(--color-ivory);
   font-family: var(--font-body);
@@ -160,7 +243,6 @@ function onCtaMouseLeave() {
   transition: color 0.2s ease;
 }
 
-/* Fill element: animated by GSAP on hover */
 .cta-fill {
   position: absolute;
   inset: 0;
@@ -179,13 +261,11 @@ function onCtaMouseLeave() {
   transform: scale(0.97);
 }
 
-/*
- * Footer: copyright text only
- */
 .site-footer {
   position: absolute;
   bottom: 2rem;
   left: var(--section-pad-x);
+  z-index: 1;
 }
 
 .footer-copyright {
@@ -196,25 +276,21 @@ function onCtaMouseLeave() {
   letter-spacing: var(--tracking-normal);
 }
 
-/* ─── Tablet (768–1024px) ─────────────────────── */
+/* ─── Tablet ─────────────────────────── */
 @media (min-width: 768px) and (max-width: 1024px) {
   .closing-section {
-    padding-inline-start: clamp(2rem, 5vw, var(--section-pad-x));
-    padding-inline-end: clamp(2rem, 5vw, var(--section-pad-x));
+    padding-inline: clamp(2rem, 5vw, var(--section-pad-x));
   }
 }
 
-/* ─── Mobile (< 768px) ────────────────────────── */
+/* ─── Mobile ─────────────────────────── */
 @media (max-width: 767px) {
   .closing-section {
-    padding-inline-start: var(--section-pad-x-narrow);
-    padding-inline-end: var(--section-pad-x-narrow);
+    padding-inline: var(--section-pad-x-narrow);
     padding-block: 4rem;
-    align-items: flex-start;
   }
 
   .closing-content {
-    width: 100%;
     gap: 2rem;
   }
 
@@ -228,7 +304,7 @@ function onCtaMouseLeave() {
   }
 }
 
-/* ─── Reduced Motion ────────────────────────────── */
+/* ─── Reduced Motion ─────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .closing-text,
   .closing-cta {

@@ -37,6 +37,16 @@ function onImageLoad() {
   imageLoaded.value = true
 }
 
+// Cursor glow position
+const glowX = ref(200)
+const glowY = ref(300)
+function onMouseMove(e: MouseEvent) {
+  if (isReduced.value || !sectionRef.value) return
+  const rect = sectionRef.value.getBoundingClientRect()
+  glowX.value = e.clientX - rect.left
+  glowY.value = e.clientY - rect.top
+}
+
 // Entrance animation on mount
 onMounted(() => {
   if (isReduced.value) return
@@ -82,7 +92,15 @@ onMounted(() => {
     ref="sectionRef"
     class="hero-section"
     aria-label="Hero"
+    @mousemove="onMouseMove"
   >
+    <!-- Cursor glow effect -->
+    <div
+      v-if="!isReduced"
+      class="hero-glow"
+      :style="{ left: glowX + 'px', top: glowY + 'px' }"
+      aria-hidden="true"
+    />
     <!-- Particle field slot: ParticleField rendered here via parent -->
     <slot name="particles" />
 
@@ -213,9 +231,28 @@ onMounted(() => {
   line-height: var(--leading-tight);
   letter-spacing: var(--tracking-tight);
   color: var(--color-ivory);
-  /* Ensure overflow visible for word animations */
   overflow: visible;
   padding-bottom: 0.25rem;
+  /* Shimmer sweep on load */
+  background: linear-gradient(
+    105deg,
+    var(--color-ivory) 0%,
+    var(--color-ivory) 40%,
+    hsl(48 60% 98%) 50%,
+    var(--color-ivory) 60%,
+    var(--color-ivory) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: headline-shimmer 3.5s ease-out forwards;
+  animation-delay: 0.5s;
+}
+
+@keyframes headline-shimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
 }
 
 .word-token {
@@ -435,5 +472,23 @@ onMounted(() => {
   .scroll-arrow {
     animation: none;
   }
+}
+
+/* ─── Cursor glow: theo chuột trong hero ────────────── */
+.hero-glow {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    hsl(350 65% 42% / 0.18) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: left 0.12s ease, top 0.12s ease;
+  z-index: 0;
+  will-change: left, top;
 }
 </style>

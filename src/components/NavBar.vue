@@ -80,7 +80,6 @@ function scrollToClosing() {
   gap: 0.5rem;
   color: var(--color-ivory);
   text-decoration: none;
-  /* prevent any wrapping — keeps both elements on one row */
   white-space: nowrap;
 }
 
@@ -88,6 +87,16 @@ function scrollToClosing() {
   font-size: 1.25rem;
   color: var(--color-crimson-light);
   line-height: 1;
+  display: inline-block;
+  animation: heartbeat 2.4s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  14%       { transform: scale(1.25); }
+  28%       { transform: scale(1); }
+  42%       { transform: scale(1.18); }
+  56%       { transform: scale(1); }
 }
 
 .navbar-logo-text {
