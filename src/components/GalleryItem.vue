@@ -126,13 +126,23 @@ function onMouseLeave() {
   position: relative;
   overflow: hidden;
   transform-style: preserve-3d;
-  /* Glassmorphism */
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 0 40px hsl(350 65% 42% / 0.15);
-  transition: box-shadow 0.4s ease;
+  /* Richer glassmorphism */
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 0 60px hsl(350 65% 42% / 0.18),
+    0 8px 32px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+  transition: box-shadow 0.4s ease, transform 0.4s ease;
+}
+
+.gallery-card:hover {
+  box-shadow:
+    0 0 80px hsl(350 65% 55% / 0.35),
+    0 16px 48px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.15);
 }
 
 .glass-inner {
@@ -146,17 +156,17 @@ function onMouseLeave() {
   padding: 1.5rem;
 }
 
-/* Large icon */
+/* Large icon — much bigger for visual impact */
 .card-icon {
-  font-size: clamp(3rem, 6vw, 5rem);
+  font-size: clamp(4rem, 8vw, 7rem);
   line-height: 1;
   display: block;
-  filter: drop-shadow(0 0 16px currentColor);
-  transition: filter 0.3s ease;
+  filter: drop-shadow(0 0 20px currentColor);
+  transition: filter 0.3s ease, transform 0.3s ease;
 }
 
 .gallery-card:hover .card-icon {
-  filter: drop-shadow(0 0 30px currentColor);
+  filter: drop-shadow(0 0 40px currentColor) drop-shadow(0 0 60px currentColor);
 }
 
 /* Caption below card */

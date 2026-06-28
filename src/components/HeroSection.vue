@@ -47,42 +47,38 @@ function onMouseMove(e: MouseEvent) {
   glowY.value = e.clientY - rect.top
 }
 
-// Entrance animation on mount
+// Entrance animation on mount — elements start visible, GSAP adds polish
 onMounted(() => {
   if (isReduced.value) return
 
   const tl = gsap.timeline({ defaults: { ease: 'cubic-bezier(0.16, 1, 0.3, 1)' } })
 
-  // Eyebrow
   if (eyebrowRef.value) {
-    tl.from(eyebrowRef.value, { y: 20, opacity: 0, duration: 0.8 }, 0.1)
+    gsap.set(eyebrowRef.value, { y: 20, opacity: 0 })
+    tl.to(eyebrowRef.value, { y: 0, opacity: 1, duration: 0.8 }, 0.1)
   }
 
-  // Headline words stagger
   if (headlineRef.value) {
     const wordSpans = headlineRef.value.querySelectorAll<HTMLElement>('.word-token')
     if (wordSpans.length) {
-      tl.from(
-        wordSpans,
-        { y: 40, opacity: 0, duration: 1.2, stagger: 0.08 },
-        0.3
-      )
+      gsap.set(wordSpans, { y: 40, opacity: 0 })
+      tl.to(wordSpans, { y: 0, opacity: 1, duration: 1.2, stagger: 0.08 }, 0.3)
     }
   }
 
-  // Subtext
   if (subtextRef.value) {
-    tl.from(subtextRef.value, { y: 20, opacity: 0, duration: 0.8 }, 0.7)
+    gsap.set(subtextRef.value, { y: 20, opacity: 0 })
+    tl.to(subtextRef.value, { y: 0, opacity: 1, duration: 0.8 }, 0.7)
   }
 
-  // CTA
   if (ctaRef.value) {
-    tl.from(ctaRef.value, { y: 20, opacity: 0, duration: 0.8 }, 0.9)
+    gsap.set(ctaRef.value, { y: 20, opacity: 0 })
+    tl.to(ctaRef.value, { y: 0, opacity: 1, duration: 0.8 }, 0.9)
   }
 
-  // Scroll indicator
   if (scrollIndicatorRef.value) {
-    tl.from(scrollIndicatorRef.value, { opacity: 0, duration: 0.6 }, 1.2)
+    gsap.set(scrollIndicatorRef.value, { opacity: 0 })
+    tl.to(scrollIndicatorRef.value, { opacity: 0.5, duration: 0.6 }, 1.2)
   }
 })
 </script>
@@ -181,7 +177,7 @@ onMounted(() => {
 .hero-section {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 55%) 1fr;
+  grid-template-columns: minmax(0, 52%) 1fr;
   grid-template-rows: 1fr;
   height: 100svh;
   height: 100dvh;
@@ -198,7 +194,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 1.5rem;
+  gap: 1.75rem;
   z-index: var(--z-content);
   padding-right: 2rem;
   align-self: center;
@@ -211,17 +207,21 @@ onMounted(() => {
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--color-crimson-light);
+  /* Always visible — don't rely on GSAP for initial state */
+  opacity: 1;
 }
 
 .hero-headline {
   font-family: var(--font-display);
-  font-size: clamp(var(--text-5xl), 7vw, var(--text-7xl));
+  /* Bigger — creates the visual center */
+  font-size: clamp(3.5rem, 8vw, 7rem);
   font-weight: 300;
-  line-height: var(--leading-tight);
+  line-height: 0.95;
   letter-spacing: var(--tracking-tight);
   color: var(--color-ivory);
   overflow: visible;
   padding-bottom: 0.25rem;
+  /* Always visible — shimmer is additive, not required for readability */
   background: linear-gradient(
     105deg,
     var(--color-ivory) 0%,
@@ -243,20 +243,16 @@ onMounted(() => {
   100% { background-position: -200% center; }
 }
 
-.word-token {
-  display: inline;
-}
-
-.word-space {
-  display: inline;
-}
+.word-token { display: inline; }
+.word-space  { display: inline; }
 
 .hero-subtext {
   font-family: var(--font-body);
-  font-size: var(--text-base);
+  font-size: var(--text-lg);
   line-height: var(--leading-normal);
   color: var(--color-ivory-dim);
-  max-width: 40ch;
+  max-width: 38ch;
+  opacity: 1;
 }
 
 .hero-cta {
@@ -264,7 +260,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   align-self: flex-start;
-  padding: 0.875rem 2.5rem;
+  padding: 1.1rem 3rem;
   background-color: var(--color-crimson);
   color: var(--color-ivory);
   font-family: var(--font-body);
@@ -276,13 +272,14 @@ onMounted(() => {
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: background-color 0.2s ease, transform 0.15s ease;
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  opacity: 1;
 }
 
 .hero-cta:hover {
   background-color: var(--color-crimson-dark);
-  box-shadow: 0 0 20px hsl(350 65% 42% / 0.5), 0 4px 12px hsl(350 65% 30% / 0.3);
-  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 0 28px hsl(350 65% 42% / 0.55), 0 4px 16px hsl(350 65% 30% / 0.4);
+  transform: translateY(-2px) scale(1.03);
 }
 
 .hero-cta:active {
@@ -307,7 +304,7 @@ onMounted(() => {
 .hero-scroll-indicator {
   position: absolute;
   bottom: 2rem;
-  left: 50%;
+  left: 27.5%;          /* center of the text column (55% / 2) */
   transform: translateX(-50%);
   z-index: var(--z-content);
   color: var(--color-ivory);
@@ -321,9 +318,7 @@ onMounted(() => {
   transition: opacity 0.2s ease;
 }
 
-.hero-scroll-indicator:hover {
-  opacity: 0.9;
-}
+.hero-scroll-indicator:hover { opacity: 0.9; }
 
 .scroll-arrow {
   animation: arrow-bounce 2s ease-in-out infinite;
@@ -334,24 +329,17 @@ onMounted(() => {
   50%       { transform: translateY(6px); }
 }
 
-/* ─── Responsive: Tablet (768–1024px) ─────────────────── */
+/* ─── Responsive: Tablet ─────────────────── */
 @media (min-width: 768px) and (max-width: 1024px) {
   .hero-section {
     grid-template-columns: 1fr 1fr;
     padding-left: clamp(2rem, 4vw, var(--section-pad-x));
   }
-
-  .hero-headline {
-    font-size: clamp(var(--text-4xl), 5.5vw, var(--text-5xl));
-  }
-
-  .hero-text {
-    padding-right: 1.5rem;
-    gap: 1.25rem;
-  }
+  .hero-headline { font-size: clamp(3rem, 6vw, 5rem); }
+  .hero-text { padding-right: 1.5rem; }
 }
 
-/* ─── Responsive: Mobile (< 768px) ─────────────────────── */
+/* ─── Responsive: Mobile ─────────────────────────────── */
 @media (max-width: 767px) {
   .hero-section {
     display: flex;
@@ -365,72 +353,45 @@ onMounted(() => {
     gap: 1.5rem;
     overflow: hidden;
   }
-
-  .hero-text {
-    padding-right: 0;
-    flex: 0 0 auto;
-    gap: 1rem;
-  }
-
-  .hero-eyebrow {
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-  }
-
+  .hero-text { padding-right: 0; flex: 0 0 auto; gap: 1rem; }
+  .hero-eyebrow { font-size: 0.65rem; letter-spacing: 0.1em; }
   .hero-headline {
-    font-size: clamp(1.75rem, 8vw, 2.5rem);
-    line-height: 1.05;
+    font-size: clamp(2.5rem, 10vw, 3.5rem);
+    line-height: 1.0;
     word-break: keep-all;
-    overflow-wrap: normal;
-    white-space: normal;
   }
-
-  .hero-subtext {
-    font-size: 0.875rem;
-    max-width: 100%;
-  }
-
-  .hero-cta {
-    padding: 0.75rem 1.75rem;
-    font-size: 0.7rem;
-  }
-
+  .hero-subtext { font-size: var(--text-base); max-width: 100%; }
+  .hero-cta { padding: 0.875rem 2rem; font-size: 0.75rem; }
   .hero-heart-panel {
     flex: 1 1 auto;
     min-height: 0;
     margin-left: calc(-1 * var(--section-pad-x-narrow));
     width: calc(100% + 2 * var(--section-pad-x-narrow));
   }
-
-  .hero-scroll-indicator {
-    bottom: 1rem;
-  }
+  .hero-scroll-indicator { bottom: 1rem; left: 50%; }
 }
 
-/* ─── Reduced Motion ────────────────────────────────── */
+/* ─── Reduced Motion ─────────── */
 @media (prefers-reduced-motion: reduce) {
-  .scroll-arrow {
-    animation: none;
-  }
-  .hero-headline {
-    animation: none;
-  }
+  .scroll-arrow { animation: none; }
+  .hero-headline { animation: none; }
 }
 
 /* ─── Cursor glow ────────────────────────────────────── */
 .hero-glow {
   position: absolute;
-  width: 320px;
-  height: 320px;
+  width: 400px;
+  height: 400px;
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    hsl(350 65% 42% / 0.18) 0%,
+    hsl(350 65% 42% / 0.22) 0%,
+    hsl(320 55% 35% / 0.08) 50%,
     transparent 70%
   );
   pointer-events: none;
   transform: translate(-50%, -50%);
-  transition: left 0.12s ease, top 0.12s ease;
+  transition: left 0.08s ease, top 0.08s ease;
   z-index: 0;
   will-change: left, top;
 }

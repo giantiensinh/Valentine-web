@@ -82,12 +82,12 @@ useGalleryScrollEngine(sectionRef, trackRef)
 }
 
 /*
- * Each gallery item: fixed height creates a consistent cinematic band.
- * Width is driven by the aspect-ratio of the image wrapper inside GalleryItem.
+ * Each gallery item: tall enough to feel cinematic.
+ * Increased from 70vh to fill the section properly.
  */
 .gallery-track :deep(.gallery-item) {
-  height: 70vh;
-  min-height: 400px;
+  height: 78vh;
+  min-height: 500px;
   flex-shrink: 0;
 }
 

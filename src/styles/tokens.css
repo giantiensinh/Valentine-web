@@ -21,19 +21,19 @@
   --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-body: 'Satoshi', system-ui, sans-serif;
 
-  --text-xs:   0.75rem;
-  --text-sm:   0.875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
   --text-base: 1rem;
-  --text-lg:   1.125rem;
-  --text-xl:   1.25rem;
-  --text-2xl:  1.5rem;
-  --text-4xl:  2.25rem;
-  --text-5xl:  3rem;
-  --text-7xl:  4.5rem;
-  --text-9xl:  8rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  --text-7xl: 4.5rem;
+  --text-9xl: 8rem;
 
   --leading-tight: 0.95;
-  --leading-snug:  1.1;
+  --leading-snug: 1.1;
   --leading-normal: 1.5;
 
   --tracking-tight: -0.04em;
@@ -48,7 +48,62 @@
 
   /* Z-index */
   --z-particles: 0;
-  --z-content:   10;
-  --z-nav:       50;
-  --z-modal:     100;
+  --z-content: 10;
+  --z-nav: 50;
+  --z-modal: 100;
+}
+
+/* ─── Global layered background gradient ──────────── */
+/*
+ * Animates slowly through purple → crimson → blue → purple.
+ * Applied to body so every section benefits from the glow.
+ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80vw 60vh at 20% 10%, hsl(280 50% 18% / 0.35) 0%, transparent 60%),
+    radial-gradient(ellipse 60vw 50vh at 80% 80%, hsl(350 55% 20% / 0.30) 0%, transparent 55%),
+    radial-gradient(ellipse 50vw 40vh at 50% 50%, hsl(220 60% 12% / 0.40) 0%, transparent 65%);
+  animation: global-aurora 18s ease-in-out infinite alternate;
+}
+
+@keyframes global-aurora {
+  0% {
+    background:
+      radial-gradient(ellipse 80vw 60vh at 20% 10%, hsl(280 50% 18% / 0.35) 0%, transparent 60%),
+      radial-gradient(ellipse 60vw 50vh at 80% 80%, hsl(350 55% 20% / 0.30) 0%, transparent 55%),
+      radial-gradient(ellipse 50vw 40vh at 50% 50%, hsl(220 60% 12% / 0.40) 0%, transparent 65%);
+  }
+
+  33% {
+    background:
+      radial-gradient(ellipse 70vw 55vh at 70% 20%, hsl(320 50% 16% / 0.32) 0%, transparent 58%),
+      radial-gradient(ellipse 65vw 45vh at 30% 70%, hsl(210 60% 18% / 0.28) 0%, transparent 52%),
+      radial-gradient(ellipse 55vw 45vh at 60% 40%, hsl(350 55% 14% / 0.35) 0%, transparent 60%);
+  }
+
+  66% {
+    background:
+      radial-gradient(ellipse 75vw 50vh at 50% 80%, hsl(240 55% 20% / 0.30) 0%, transparent 55%),
+      radial-gradient(ellipse 55vw 60vh at 20% 30%, hsl(350 60% 18% / 0.32) 0%, transparent 58%),
+      radial-gradient(ellipse 60vw 40vh at 80% 10%, hsl(280 45% 15% / 0.38) 0%, transparent 62%);
+  }
+
+  100% {
+    background:
+      radial-gradient(ellipse 65vw 65vh at 40% 60%, hsl(300 45% 16% / 0.28) 0%, transparent 55%),
+      radial-gradient(ellipse 70vw 40vh at 70% 20%, hsl(350 55% 20% / 0.30) 0%, transparent 58%),
+      radial-gradient(ellipse 50vw 50vh at 10% 90%, hsl(220 60% 18% / 0.35) 0%, transparent 60%);
+  }
+}
+
+/* Reduced motion: freeze aurora */
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
 }
