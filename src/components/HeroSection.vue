@@ -59,7 +59,7 @@ onMounted(() => {
   }
 
   if (headlineRef.value) {
-    const wordSpans = headlineRef.value.querySelectorAll<HTMLElement>('.word-token')
+    const wordSpans = Array.from(headlineRef.value.querySelectorAll<HTMLElement>('.word-token'))
     if (wordSpans.length) {
       gsap.set(wordSpans, { y: 40, opacity: 0 })
       tl.to(wordSpans, { y: 0, opacity: 1, duration: 1.2, stagger: 0.08 }, 0.3)

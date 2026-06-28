@@ -49,6 +49,7 @@ useGalleryScrollEngine(sectionRef, trackRef)
         v-for="(item, idx) in galleryItems"
         :key="item.caption + idx"
         :item="item"
+        :index="idx"
       />
     </div>
   </section>
