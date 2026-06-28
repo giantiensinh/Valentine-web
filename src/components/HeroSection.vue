@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { gsap } from 'gsap'
 import { useReducedMotion } from '../composables/useReducedMotion'
 import { useHeroScrollEngine } from '../composables/useScrollEngine'
+import { useHeartParticles } from '../composables/useHeartParticles'
 import MeshGradient from './MeshGradient.vue'
 
 const props = defineProps<{
@@ -18,9 +19,13 @@ const eyebrowRef = ref<HTMLElement>()
 const subtextRef = ref<HTMLElement>()
 const ctaRef = ref<HTMLElement>()
 const scrollIndicatorRef = ref<HTMLElement>()
+const heartCanvasRef = ref<HTMLCanvasElement>()
 
 // Register scroll engine (guards isReduced internally)
 useHeroScrollEngine(sectionRef, props.onBloomTrigger)
+
+// Heart particle visual on right side
+useHeartParticles(heartCanvasRef, isReduced)
 
 // Expose sectionRef so App.vue can pass the DOM element to NavBar
 defineExpose({ sectionRef })
@@ -30,12 +35,6 @@ function scrollToStory() {
   const storySection = document.querySelector<HTMLElement>('[aria-label="Our story"]')
   if (!storySection) return
   storySection.scrollIntoView({ behavior: isReduced.value ? 'auto' : 'smooth' })
-}
-
-// Track image loaded state for skeleton fade-in
-const imageLoaded = ref(false)
-function onImageLoad() {
-  imageLoaded.value = true
 }
 
 // Cursor glow position
@@ -105,10 +104,11 @@ onMounted(() => {
       :style="{ left: glowX + 'px', top: glowY + 'px' }"
       aria-hidden="true"
     />
+
     <!-- Particle field slot: ParticleField rendered here via parent -->
     <slot name="particles" />
 
-    <!-- Text Column: ≤ 55vw -->
+    <!-- Text Column -->
     <div class="hero-text">
       <!-- 1. Eyebrow: uppercase + wide tracking micro-label -->
       <p ref="eyebrowRef" class="hero-eyebrow">Một ngày đặc biệt</p>
@@ -137,21 +137,11 @@ onMounted(() => {
       </button>
     </div>
 
-    <!-- Asset Column -->
-    <div class="hero-asset" aria-hidden="true">
-      <!-- Skeleton loader shown while image is loading -->
-      <div class="hero-image-skeleton" :class="{ 'is-hidden': imageLoaded }" aria-hidden="true"></div>
-      <img
-        ref="heroImageRef"
-        src="https://picsum.photos/seed/valentine-hero/900/1200"
-        alt="Khoảnh khắc lãng mạn"
-        width="900"
-        height="1200"
-        fetchpriority="high"
-        loading="eager"
-        class="hero-image"
-        :class="{ 'is-loaded': imageLoaded }"
-        @load="onImageLoad"
+    <!-- Heart Particle Canvas (right side) -->
+    <div class="hero-heart-panel" aria-hidden="true">
+      <canvas
+        ref="heartCanvasRef"
+        class="heart-canvas"
       />
     </div>
 
@@ -188,17 +178,12 @@ onMounted(() => {
 
 <style scoped>
 /* ─── Hero Layout ────────────────────────────────── */
-/*
- * Exact 100svh for GSAP pin — do NOT use min-height here.
- * GSAP ScrollTrigger pin requires a known, fixed height.
- */
 .hero-section {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 55%) 1fr;
   grid-template-rows: 1fr;
   height: 100svh;
-  /* Fallback for browsers without svh support */
   height: 100dvh;
   padding-top: clamp(4rem, 8vw, 6rem);
   padding-bottom: var(--section-pad-y);
@@ -237,7 +222,6 @@ onMounted(() => {
   color: var(--color-ivory);
   overflow: visible;
   padding-bottom: 0.25rem;
-  /* Shimmer sweep on load */
   background: linear-gradient(
     105deg,
     var(--color-ivory) 0%,
@@ -305,54 +289,18 @@ onMounted(() => {
   transform: scale(0.97);
 }
 
-/* ─── Asset Column ─────────────────────────────────── */
-/* fills the right grid cell completely */
-.hero-asset {
+/* ─── Heart Particle Panel ─────────────────────────── */
+.hero-heart-panel {
   position: relative;
   overflow: hidden;
   align-self: stretch;
 }
 
-/* Skeleton loader: animated shimmer while image loads */
-.hero-image-skeleton {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    110deg,
-    hsl(225 38% 11%) 0%,
-    hsl(225 38% 14%) 40%,
-    hsl(225 38% 11%) 80%
-  );
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
-  transition: opacity 0.4s ease;
-  z-index: 1;
-}
-
-.hero-image-skeleton.is-hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-@keyframes skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-.hero-image {
-  position: absolute;
-  inset: 0;
+.heart-canvas {
   width: 100%;
   height: 100%;
-  object-fit: cover;
   display: block;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  z-index: 2;
-}
-
-.hero-image.is-loaded {
-  opacity: 1;
+  cursor: crosshair;
 }
 
 /* ─── Scroll Indicator ──────────────────────────────── */
@@ -371,7 +319,6 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   transition: opacity 0.2s ease;
-  /* Only animate when motion is allowed — handled via @media below */
 }
 
 .hero-scroll-indicator:hover {
@@ -411,7 +358,6 @@ onMounted(() => {
     flex-direction: column;
     height: 100svh;
     height: 100dvh;
-    /* Đảm bảo override padding desktop */
     padding-left: var(--section-pad-x-narrow) !important;
     padding-right: var(--section-pad-x-narrow) !important;
     padding-top: 5rem;
@@ -432,10 +378,8 @@ onMounted(() => {
   }
 
   .hero-headline {
-    /* 8vw trên 390px = ~31px = ~1.95rem — vừa đủ để không tràn */
     font-size: clamp(1.75rem, 8vw, 2.5rem);
     line-height: 1.05;
-    /* Ngắt dòng ở khoảng trắng, không ngắt giữa từ */
     word-break: keep-all;
     overflow-wrap: normal;
     white-space: normal;
@@ -451,11 +395,9 @@ onMounted(() => {
     font-size: 0.7rem;
   }
 
-  .hero-asset {
-    position: relative;
+  .hero-heart-panel {
     flex: 1 1 auto;
     min-height: 0;
-    /* Stretch full width phá padding để ảnh tràn đẹp */
     margin-left: calc(-1 * var(--section-pad-x-narrow));
     width: calc(100% + 2 * var(--section-pad-x-narrow));
   }
@@ -467,20 +409,15 @@ onMounted(() => {
 
 /* ─── Reduced Motion ────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .hero-image {
-    opacity: 1;
-    transition: none;
-  }
-  .hero-image-skeleton {
-    animation: none;
-    opacity: 0;
-  }
   .scroll-arrow {
+    animation: none;
+  }
+  .hero-headline {
     animation: none;
   }
 }
 
-/* ─── Cursor glow: theo chuột trong hero ────────────── */
+/* ─── Cursor glow ────────────────────────────────────── */
 .hero-glow {
   position: absolute;
   width: 320px;

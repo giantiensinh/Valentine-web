@@ -12,11 +12,15 @@ const closingTextRef = ref<HTMLElement>()
 const typingRef = ref<HTMLElement>()
 const canvasRef = ref<HTMLCanvasElement>()
 const confettiRef = ref<InstanceType<typeof ConfettiOverlay>>()
+const revealWordRefs = ref<HTMLElement[]>()
 const hasFadedIn = ref(false)
 const hasTyped = ref(false)
 const typingDone = ref(false)
 
-// ─── Typing animation ─────────────────────────────
+// ─── Mask reveal words ──────────────────────────
+const REVEAL_WORDS = ['Will', 'you', 'be', 'my', 'Valentine?']
+
+// ─── Typing animation ────────────────────────────
 const TYPING_TEXT = 'Em có muốn làm Valentine của tôi không? ❤'
 
 function startTyping() {
@@ -26,7 +30,6 @@ function startTyping() {
   el.textContent = ''
   let i = 0
 
-  // Use [...text] to handle emoji correctly
   const chars = [...TYPING_TEXT]
 
   function typeNext() {
@@ -72,7 +75,7 @@ function initAurora() {
       { x: 0.5  + Math.sin(t * 0.9) * 0.1,  y: 0.6  + Math.cos(t * 0.4) * 0.1,  r: 0.30, hue: 10,  sat: 70, lig: 40, a: 0.09 },
     ]
     for (const b of blobs) {
-      const grd = ctx.createRadialGradient(b.x*w, b.y*h, 0, b.x*w, b.y*h, b.r*Math.max(w,h))
+      const grd = ctx.createRadialGradient(b.x * w, b.y * h, 0, b.x * w, b.y * h, b.r * Math.max(w, h))
       grd.addColorStop(0, `hsla(${b.hue},${b.sat}%,${b.lig}%,${b.a})`)
       grd.addColorStop(1, `hsla(${b.hue},${b.sat}%,${b.lig}%,0)`)
       ctx.fillStyle = grd
@@ -88,7 +91,7 @@ function initAurora() {
   }
 }
 
-// ─── Entrance animation + trigger typing ─────────
+// ─── Entrance animation + mask reveal ────────────
 useIntersectionObserver(
   sectionRef,
   ([entry]) => {
@@ -97,11 +100,32 @@ useIntersectionObserver(
       hasFadedIn.value = true
       if (!isReduced.value) {
         const tl = gsap.timeline()
-        if (closingTextRef.value) tl.from(closingTextRef.value, { opacity: 0, y: 24, duration: 0.8, ease: 'power2.out' }, 0)
-        if (ctaRef.value) tl.from(ctaRef.value, { opacity: 0, y: 24, duration: 0.8, ease: 'power2.out' }, 0.3)
-        tl.call(startTyping, [], 0.6)
+
+        // Mask reveal: each word clips from inset(100% 0 0 0) → inset(0% 0 0 0)
+        if (revealWordRefs.value && revealWordRefs.value.length) {
+          tl.fromTo(
+            revealWordRefs.value,
+            { clipPath: 'inset(100% 0 0 0)', y: 20 },
+            {
+              clipPath: 'inset(0% 0 0 0)',
+              y: 0,
+              duration: 0.7,
+              ease: 'power3.out',
+              stagger: 0.12,
+            },
+            0
+          )
+        }
+
+        if (closingTextRef.value) {
+          tl.from(closingTextRef.value, { opacity: 0, y: 24, duration: 0.8, ease: 'power2.out' }, 0.5)
+        }
+        if (ctaRef.value) {
+          tl.from(ctaRef.value, { opacity: 0, y: 24, duration: 0.8, ease: 'power2.out' }, 0.8)
+        }
+        tl.call(startTyping, [], 0.9)
       } else {
-        // Reduced: show typing text immediately
+        // Reduced: show text immediately
         if (typingRef.value) typingRef.value.textContent = TYPING_TEXT
         typingDone.value = true
       }
@@ -133,12 +157,11 @@ function onCtaMouseLeave() {
 
 // ─── CTA click → confetti ─────────────────────────
 function onCtaClick(e: MouseEvent) {
-  // Ripple
   if (!ctaRef.value || isReduced.value) return
   const rect = ctaRef.value.getBoundingClientRect()
   const ripple = document.createElement('span')
   ripple.style.cssText = `
-    position:absolute;left:${e.clientX-rect.left}px;top:${e.clientY-rect.top}px;
+    position:absolute;left:${e.clientX - rect.left}px;top:${e.clientY - rect.top}px;
     width:8px;height:8px;border-radius:50%;
     background:hsl(48 22% 92% / 0.4);
     transform:translate(-50%,-50%) scale(0);pointer-events:none;
@@ -146,7 +169,6 @@ function onCtaClick(e: MouseEvent) {
   ctaRef.value.appendChild(ripple)
   gsap.to(ripple, { scale: 20, opacity: 0, duration: 0.7, ease: 'power2.out', onComplete: () => ripple.remove() })
 
-  // Confetti burst
   confettiRef.value?.burst(e.clientX, e.clientY)
 }
 
@@ -165,6 +187,29 @@ onUnmounted(() => { cleanupAurora?.() })
     <ConfettiOverlay ref="confettiRef" />
 
     <div class="closing-content">
+
+      <!-- Mask reveal heading -->
+      <h2 class="reveal-heading" aria-label="Will you be my Valentine?">
+        <span
+          v-for="(word, i) in REVEAL_WORDS"
+          :key="i"
+          :ref="(el) => { if (el) (revealWordRefs as HTMLElement[])[i] = el as HTMLElement }"
+          class="reveal-word"
+        >{{ word }}</span>
+      </h2>
+
+      <!-- Heart orbit -->
+      <div class="heart-orbit" aria-hidden="true">
+        <div class="orbit-ring">
+          <span
+            v-for="i in 6"
+            :key="i"
+            class="orbit-heart"
+            :style="{ '--orbit-delay': `${(i - 1) * (360 / 6)}deg` }"
+          >♥</span>
+        </div>
+      </div>
+
       <p ref="closingTextRef" class="closing-text">Mãi mãi, chỉ là em thôi.</p>
 
       <!-- Typing question -->
@@ -229,6 +274,65 @@ onUnmounted(() => { cleanupAurora?.() })
   align-items: flex-start;
 }
 
+/* ─── Mask Reveal Heading ─────────────────────── */
+.reveal-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.1;
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-ivory);
+}
+
+.reveal-word {
+  display: inline-block;
+  clip-path: inset(0% 0 0 0);
+  /* Initial state before GSAP kicks in — hidden */
+  will-change: clip-path, transform;
+}
+
+/* ─── Heart Orbit ─────────────────────────────── */
+.heart-orbit {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  align-self: flex-start;
+  margin-left: 1rem;
+}
+
+.orbit-ring {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.orbit-heart {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 0.9rem;
+  color: var(--color-crimson-light);
+  /* Each heart starts at its angular offset, then orbits */
+  transform-origin: 0 0;
+  /* Translate to orbit radius, then rotate around center */
+  animation: orbit-spin 4s linear infinite;
+  animation-delay: calc(var(--orbit-delay) / 360 * -4s);
+  filter: drop-shadow(0 0 4px hsl(350 65% 55% / 0.8));
+}
+
+@keyframes orbit-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(var(--orbit-delay)) translateX(52px) rotate(calc(-1 * var(--orbit-delay)));
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(calc(var(--orbit-delay) + 360deg)) translateX(52px) rotate(calc(-1 * (var(--orbit-delay) + 360deg)));
+  }
+}
+
 .closing-text {
   font-family: var(--font-body);
   font-size: var(--text-sm);
@@ -251,7 +355,6 @@ onUnmounted(() => { cleanupAurora?.() })
   letter-spacing: var(--tracking-tight);
 }
 
-/* Blinking cursor while typing */
 .closing-typing.show-cursor::after {
   content: '|';
   color: var(--color-crimson-light);
@@ -329,10 +432,14 @@ onUnmounted(() => { cleanupAurora?.() })
   .closing-cta { width: 100%; justify-content: center; }
   .site-footer { left: var(--section-pad-x-narrow); }
   .closing-typing { font-size: clamp(1.1rem, 5vw, 1.6rem); }
+  .reveal-heading { font-size: clamp(1.5rem, 7vw, 2.5rem); }
+  .heart-orbit { width: 80px; height: 80px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .closing-text, .closing-cta { opacity: 1 !important; transform: none !important; }
   .closing-typing.show-cursor::after { animation: none; }
+  .orbit-heart { animation: none; }
+  .reveal-word { clip-path: inset(0% 0 0 0) !important; transform: none !important; }
 }
 </style>

@@ -29,7 +29,7 @@ useGalleryScrollEngine(sectionRef, trackRef)
     ref="sectionRef"
     class="gallery-section"
     :class="{ 'gallery-section--reduced': isReduced }"
-    aria-label="Gallery"
+    aria-label="Memories"
   >
     <!-- Scroll hint: only shown when horizontal scroll is active -->
     <div
@@ -46,8 +46,8 @@ useGalleryScrollEngine(sectionRef, trackRef)
       class="gallery-track"
     >
       <GalleryItem
-        v-for="item in galleryItems"
-        :key="item.src"
+        v-for="(item, idx) in galleryItems"
+        :key="item.caption + idx"
         :item="item"
       />
     </div>

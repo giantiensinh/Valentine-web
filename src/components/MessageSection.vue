@@ -11,9 +11,11 @@ const line1Ref = ref<HTMLElement>()
 const line2Ref = ref<HTMLElement>()
 const subtextRef = ref<HTMLElement>()
 const heartsRef = ref<HTMLElement>()
+const underline1Ref = ref<HTMLElement>()
+const underline2Ref = ref<HTMLElement>()
 const hasRevealed = ref(false)
 
-// Tách headline thành 2 dòng cố định — tránh tràn viewport
+// Tách headline thành 2 dòng cố định
 const line1 = 'Có những điều không cần nói thành lời,'
 const line2 = 'chỉ cần em luôn ở đây, bên tôi, là đủ rồi.'
 
@@ -36,12 +38,19 @@ useIntersectionObserver(
     if (subtextRef.value) {
       tl.from(subtextRef.value, { opacity: 0, y: 16, duration: 0.6 }, 0.6)
     }
+
+    // Animate underlines: width from 0 → 100%
+    if (underline1Ref.value) {
+      tl.fromTo(underline1Ref.value, { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: 'power3.out' }, 0.4)
+    }
+    if (underline2Ref.value) {
+      tl.fromTo(underline2Ref.value, { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: 'power3.out' }, 0.65)
+    }
   },
   { threshold: 0.25 }
 )
 
-// Hiệu ứng trái tim nổi lên — tạo động bằng GSAP
-
+// Floating hearts
 function spawnHeart() {
   if (!heartsRef.value || isReduced.value) return
 
@@ -49,11 +58,10 @@ function spawnHeart() {
   heart.textContent = Math.random() > 0.5 ? '♥' : '♡'
   heart.className = 'floating-heart'
 
-  // Vị trí ngẫu nhiên theo chiều ngang
   const x = Math.random() * 100
-  const size = Math.random() * 1.2 + 0.6  // 0.6–1.8rem
-  const hue = Math.random() > 0.6 ? 350 : 0  // crimson hoặc đỏ thuần
-  const lightness = Math.random() * 20 + 45   // 45–65%
+  const size = Math.random() * 1.2 + 0.6
+  const hue = Math.random() > 0.6 ? 350 : 0
+  const lightness = Math.random() * 20 + 45
 
   heart.style.cssText = `
     left: ${x}%;
@@ -73,17 +81,14 @@ function spawnHeart() {
     { opacity: 0, y: 0, scale: 0.5 },
     {
       opacity: 0.7,
-      y: -(Math.random() * 220 + 120),  // nổi lên 120–340px
+      y: -(Math.random() * 220 + 120),
       scale: 1,
-      duration: Math.random() * 2.5 + 2.5,  // 2.5–5s
+      duration: Math.random() * 2.5 + 2.5,
       ease: 'power1.out',
-      onComplete: () => {
-        heart.remove()
-      },
+      onComplete: () => { heart.remove() },
     }
   )
 
-  // Fade out ở nửa cuối hành trình
   gsap.to(heart, {
     opacity: 0,
     duration: 1.2,
@@ -96,9 +101,7 @@ let spawnInterval: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   if (isReduced.value) return
-  // Spawn trái tim mỗi 600ms
   spawnInterval = setInterval(spawnHeart, 600)
-  // Spawn ngay lập tức vài cái ban đầu
   setTimeout(spawnHeart, 200)
   setTimeout(spawnHeart, 500)
   setTimeout(spawnHeart, 900)
@@ -116,18 +119,30 @@ onUnmounted(() => {
     :class="{ 'message-section--reduced': isReduced }"
     aria-label="Message"
   >
-    <!-- Container trái tim nổi — nằm dưới text -->
+    <!-- Paper texture overlay -->
+    <div class="paper-texture" aria-hidden="true"></div>
+
+    <!-- Floating hearts -->
     <div ref="heartsRef" class="hearts-field" aria-hidden="true"></div>
 
     <div class="message-content">
-      <!-- Dòng 1 -->
+      <!-- Headline with animated underlines -->
       <h2 class="message-headline">
-        <span ref="line1Ref" class="headline-line">{{ line1 }}</span>
-        <span ref="line2Ref" class="headline-line headline-line--indent">{{ line2 }}</span>
+        <span class="headline-wrap">
+          <span ref="line1Ref" class="headline-line">{{ line1 }}</span>
+          <span ref="underline1Ref" class="headline-underline" aria-hidden="true"></span>
+        </span>
+        <span class="headline-wrap">
+          <span ref="line2Ref" class="headline-line headline-line--indent">{{ line2 }}</span>
+          <span ref="underline2Ref" class="headline-underline" aria-hidden="true"></span>
+        </span>
       </h2>
 
       <!-- Subtext -->
       <p ref="subtextRef" class="message-subtext">{{ messageSubtext }}</p>
+
+      <!-- Heart pulse at bottom -->
+      <div ref="heartPulseRef" class="heart-pulse" aria-hidden="true">♥</div>
     </div>
   </section>
 </template>
@@ -148,6 +163,18 @@ onUnmounted(() => {
   overflow: hidden;
   padding-inline: var(--section-pad-x);
   padding-block: var(--section-pad-y);
+}
+
+/* ─── Paper texture ────────────────────────────────── */
+.paper-texture {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 300px 300px;
 }
 
 /* ─── Hearts field ─────────────────────────────── */
@@ -179,7 +206,14 @@ onUnmounted(() => {
   color: var(--color-ivory);
   display: flex;
   flex-direction: column;
-  gap: 0.25em;
+  gap: 0.5em;
+}
+
+/* Each line wrapped with its underline */
+.headline-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
 }
 
 .headline-line {
@@ -187,10 +221,23 @@ onUnmounted(() => {
   font-size: clamp(1.5rem, 3.2vw, 3.5rem);
 }
 
-/* Dòng 2 thụt vào một chút để tạo nhịp điệu editorial */
 .headline-line--indent {
   padding-left: clamp(1rem, 4vw, 3rem);
   opacity: 0.9;
+}
+
+/* Animated underline */
+.headline-underline {
+  display: block;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    var(--color-crimson-light),
+    hsl(350 65% 55% / 0.3)
+  );
+  transform-origin: left center;
+  transform: scaleX(0);
+  /* Reduced motion: show immediately */
 }
 
 /* ─── Subtext ──────────────────────────────────── */
@@ -203,11 +250,38 @@ onUnmounted(() => {
   max-width: 38ch;
 }
 
+/* ─── Heart pulse ──────────────────────────────── */
+.heart-pulse {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  color: var(--color-crimson-light);
+  line-height: 1;
+  display: inline-block;
+  animation: heart-beat 1.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px hsl(350 65% 55% / 0.6));
+  align-self: flex-start;
+}
+
+@keyframes heart-beat {
+  0%, 100% { transform: scale(1); }
+  14%       { transform: scale(1.18); }
+  28%       { transform: scale(1); }
+  42%       { transform: scale(1.12); }
+  70%       { transform: scale(1); }
+}
+
 /* ─── Reduced motion ───────────────────────────── */
 .message-section--reduced .headline-line,
 .message-section--reduced .message-subtext {
   opacity: 1 !important;
   transform: none !important;
+}
+
+.message-section--reduced .headline-underline {
+  transform: scaleX(1) !important;
+}
+
+.message-section--reduced .heart-pulse {
+  animation: none;
 }
 
 /* ─── Tablet ───────────────────────────────────── */
@@ -233,7 +307,6 @@ onUnmounted(() => {
   }
 
   .headline-line {
-    /* 5.5vw trên 390px = ~21px = 1.3rem — vừa đủ, không tràn */
     font-size: clamp(1.2rem, 5.5vw, 1.6rem);
     line-height: 1.4;
   }
@@ -245,6 +318,21 @@ onUnmounted(() => {
   .message-subtext {
     font-size: var(--text-sm);
     max-width: 100%;
+  }
+
+  .heart-pulse {
+    font-size: 2.5rem;
+  }
+}
+
+/* ─── prefers-reduced-motion ───────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .heart-pulse {
+    animation: none;
+  }
+  .headline-underline {
+    transform: scaleX(1);
+    transition: none;
   }
 }
 </style>

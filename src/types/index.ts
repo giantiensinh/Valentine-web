@@ -20,6 +20,8 @@ export interface GalleryItemData {
     alt: string
     caption: string
     aspectRatio: '16/9' | '3/4' | '1/1' | '9/16'
+    icon?: string
+    color?: string
 }
 
 /**

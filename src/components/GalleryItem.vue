@@ -10,23 +10,61 @@ const props = defineProps<{
 }>()
 
 const { isReduced } = useReducedMotion()
-const imageWrapperRef = ref<HTMLElement>()
-const imageRef = ref<HTMLImageElement>()
+const cardWrapperRef = ref<HTMLElement>()
 const captionRef = ref<HTMLElement>()
-const imageLoaded = ref(false)
+const iconRef = ref<HTMLElement>()
 
 // 3D tilt on hover
-useTiltEffect(imageWrapperRef)
+useTiltEffect(cardWrapperRef)
 
-function onImgLoad() {
-  imageLoaded.value = true
+// Spawn micro-particles on hover
+function spawnParticles(originEl: HTMLElement): void {
+  if (isReduced.value) return
+  const rect = originEl.getBoundingClientRect()
+  for (let i = 0; i < 8; i++) {
+    const dot = document.createElement('span')
+    dot.style.cssText = `
+      position: fixed;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: ${props.item.color ?? 'hsl(350,65%,55%)'};
+      left: ${rect.left + rect.width / 2}px;
+      top: ${rect.top + rect.height / 2}px;
+      pointer-events: none;
+      z-index: 9999;
+    `
+    document.body.appendChild(dot)
+    const angle = (i / 8) * Math.PI * 2
+    const dist = 40 + Math.random() * 60
+    gsap.fromTo(
+      dot,
+      { opacity: 1, scale: 1 },
+      {
+        x: Math.cos(angle) * dist,
+        y: Math.sin(angle) * dist,
+        opacity: 0,
+        scale: 0.3,
+        duration: 0.7 + Math.random() * 0.4,
+        ease: 'power2.out',
+        onComplete: () => dot.remove(),
+      }
+    )
+  }
 }
 
-// Zoom image + slide caption on hover
-function onMouseEnter() {
+// Hover: glow increase + icon scale + caption slide
+function onMouseEnter(_e: MouseEvent) {
   if (isReduced.value) return
-  if (imageRef.value) {
-    gsap.to(imageRef.value, { scale: 1.06, duration: 0.5, ease: 'power2.out' })
+  if (cardWrapperRef.value) {
+    gsap.to(cardWrapperRef.value, {
+      boxShadow: `0 0 60px ${props.item.color ?? 'hsl(350,65%,42%)'} / 0.35), 0 0 100px hsl(350 65% 42% / 0.1)`,
+      duration: 0.4,
+      ease: 'power2.out',
+    })
+    spawnParticles(cardWrapperRef.value)
+  }
+  if (iconRef.value) {
+    gsap.to(iconRef.value, { scale: 1.2, duration: 0.35, ease: 'back.out(2)' })
   }
   if (captionRef.value) {
     gsap.to(captionRef.value, { y: -4, opacity: 1, duration: 0.3, ease: 'power2.out' })
@@ -35,11 +73,11 @@ function onMouseEnter() {
 
 function onMouseLeave() {
   if (isReduced.value) return
-  if (imageRef.value) {
-    gsap.to(imageRef.value, { scale: 1, duration: 0.5, ease: 'power2.out' })
+  if (iconRef.value) {
+    gsap.to(iconRef.value, { scale: 1, duration: 0.35, ease: 'power2.out' })
   }
   if (captionRef.value) {
-    gsap.to(captionRef.value, { y: 0, opacity: 0.6, duration: 0.3, ease: 'power2.out' })
+    gsap.to(captionRef.value, { y: 0, opacity: 0.65, duration: 0.3, ease: 'power2.out' })
   }
 }
 </script>
@@ -51,27 +89,22 @@ function onMouseLeave() {
     @mouseleave="onMouseLeave"
   >
     <div
-      ref="imageWrapperRef"
-      class="gallery-image-wrapper"
+      ref="cardWrapperRef"
+      class="gallery-card"
       :style="{ aspectRatio: item.aspectRatio }"
     >
-      <!-- Skeleton -->
-      <div
-        class="gallery-skeleton"
-        :class="{ 'is-hidden': imageLoaded }"
-        aria-hidden="true"
-      ></div>
-
-      <img
-        ref="imageRef"
-        :src="item.src"
-        :alt="item.alt"
-        loading="lazy"
-        class="gallery-image"
-        :class="{ 'is-loaded': imageLoaded }"
-        :style="{ aspectRatio: item.aspectRatio }"
-        @load="onImgLoad"
-      />
+      <!-- Glass card inner -->
+      <div class="glass-inner">
+        <!-- Large icon at center -->
+        <span
+          ref="iconRef"
+          class="card-icon"
+          :style="{ color: item.color ?? 'var(--color-crimson-light)' }"
+          aria-hidden="true"
+        >
+          {{ item.icon ?? '♥' }}
+        </span>
+      </div>
     </div>
 
     <figcaption ref="captionRef" class="gallery-caption">
@@ -88,75 +121,63 @@ function onMouseLeave() {
   flex-shrink: 0;
 }
 
-.gallery-image-wrapper {
+/* Glass card wrapper — handles tilt + aspect ratio */
+.gallery-card {
   position: relative;
   overflow: hidden;
   transform-style: preserve-3d;
+  /* Glassmorphism */
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 40px hsl(350 65% 42% / 0.15);
+  transition: box-shadow 0.4s ease;
 }
 
-/* Skeleton */
-.gallery-skeleton {
+.glass-inner {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    110deg,
-    hsl(225 38% 11%) 0%,
-    hsl(225 38% 15%) 40%,
-    hsl(225 38% 11%) 80%
-  );
-  background-size: 200% 100%;
-  animation: gallery-shimmer 1.5s ease-in-out infinite;
-  z-index: 1;
-  transition: opacity 0.4s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
 }
 
-.gallery-skeleton.is-hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-@keyframes gallery-shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-.gallery-image {
+/* Large icon */
+.card-icon {
+  font-size: clamp(3rem, 6vw, 5rem);
+  line-height: 1;
   display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* Scale driven by GSAP on hover — start at 1 */
-  transform-origin: center center;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  z-index: 2;
-  position: relative;
+  filter: drop-shadow(0 0 16px currentColor);
+  transition: filter 0.3s ease;
 }
 
-.gallery-image.is-loaded {
-  opacity: 1;
+.gallery-card:hover .card-icon {
+  filter: drop-shadow(0 0 30px currentColor);
 }
 
+/* Caption below card */
 .gallery-caption {
-  font-family: var(--font-body);
+  font-family: var(--font-display);
   font-size: var(--text-sm);
+  font-style: italic;
   line-height: var(--leading-normal);
   color: var(--color-ivory);
-  opacity: 0.6;
-  transition: none; /* GSAP handles opacity/transform */
+  opacity: 0.65;
+  text-align: center;
+  /* GSAP handles opacity/transform transitions */
 }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .gallery-skeleton {
-    animation: none;
-    opacity: 0;
-  }
-  .gallery-image {
-    opacity: 1;
-  }
   .gallery-caption {
-    opacity: 0.6 !important;
+    opacity: 0.65 !important;
+    transform: none !important;
+  }
+  .card-icon {
     transform: none !important;
   }
 }

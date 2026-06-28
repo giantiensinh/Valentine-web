@@ -1,11 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useReducedMotion } from '../composables/useReducedMotion'
 import type { StorySceneData } from '../types/index'
-
-gsap.registerPlugin(ScrollTrigger)
 
 const props = defineProps<{
   scene: StorySceneData
@@ -13,36 +9,137 @@ const props = defineProps<{
 }>()
 
 const { isReduced } = useReducedMotion()
-const articleRef = ref<HTMLElement>()
-const imgRef = ref<HTMLImageElement>()
-const imageLoaded = ref(false)
-let ctx: gsap.Context | null = null
+const canvasRef = ref<HTMLCanvasElement>()
 
-function onImgLoad() {
-  imageLoaded.value = true
+// ─── Scene configs ────────────────────────────────
+interface SceneConfig {
+  gradientFrom: string
+  gradientTo: string
+  particleChar: string
+  particleHue: number
+}
+
+const SCENE_CONFIGS: SceneConfig[] = [
+  // Scene 0: warm crimson — heart particles
+  {
+    gradientFrom: 'hsl(340, 60%, 15%)',
+    gradientTo: 'hsl(310, 50%, 8%)',
+    particleChar: '♥',
+    particleHue: 350,
+  },
+  // Scene 1: purple — sparkle particles
+  {
+    gradientFrom: 'hsl(270, 50%, 15%)',
+    gradientTo: 'hsl(240, 60%, 8%)',
+    particleChar: '✦',
+    particleHue: 270,
+  },
+  // Scene 2: blue — cherry blossom particles
+  {
+    gradientFrom: 'hsl(210, 60%, 15%)',
+    gradientTo: 'hsl(225, 70%, 8%)',
+    particleChar: '✿',
+    particleHue: 320,
+  },
+]
+
+const config = computed<SceneConfig>(() => SCENE_CONFIGS[props.index % SCENE_CONFIGS.length])
+
+// ─── Lightweight canvas particles ─────────────────
+interface SceneParticle {
+  x: number
+  y: number
+  vx: number
+  vy: number
+  size: number
+  opacity: number
+  opacityDir: number
+}
+
+let rafId: number | null = null
+let sceneParticles: SceneParticle[] = []
+let cw = 0
+let ch = 0
+
+function makeParticle(): SceneParticle {
+  return {
+    x: Math.random() * cw,
+    y: Math.random() * ch,
+    vx: (Math.random() - 0.5) * 0.3,
+    vy: -0.2 - Math.random() * 0.4,
+    size: Math.random() * 10 + 8,
+    opacity: Math.random() * 0.5 + 0.2,
+    opacityDir: Math.random() > 0.5 ? 1 : -1,
+  }
+}
+
+function initCanvas(): void {
+  const canvas = canvasRef.value
+  if (!canvas || isReduced.value) return
+  cw = canvas.offsetWidth
+  ch = canvas.offsetHeight
+  canvas.width = cw
+  canvas.height = ch
+  sceneParticles = Array.from({ length: 25 }, makeParticle)
+}
+
+function drawParticles(): void {
+  const canvas = canvasRef.value
+  if (!canvas) return
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+
+  ctx.clearRect(0, 0, cw, ch)
+
+  const char = config.value.particleChar
+  const hue = config.value.particleHue
+
+  for (const p of sceneParticles) {
+    // Update
+    p.x += p.vx
+    p.y += p.vy
+    p.opacity += p.opacityDir * 0.003
+    if (p.opacity > 0.7) { p.opacity = 0.7; p.opacityDir = -1 }
+    if (p.opacity < 0.1) { p.opacity = 0.1; p.opacityDir = 1 }
+
+    // Wrap edges
+    if (p.y < -20) p.y = ch + 10
+    if (p.x < -20) p.x = cw + 10
+    if (p.x > cw + 20) p.x = -10
+
+    ctx.save()
+    ctx.globalAlpha = p.opacity
+    ctx.font = `${p.size}px serif`
+    ctx.fillStyle = `hsl(${hue}, 65%, 70%)`
+    ctx.fillText(char, p.x, p.y)
+    ctx.restore()
+  }
+
+  rafId = requestAnimationFrame(drawParticles)
+}
+
+function onResize(): void {
+  const canvas = canvasRef.value
+  if (!canvas) return
+  cw = canvas.offsetWidth
+  ch = canvas.offsetHeight
+  canvas.width = cw
+  canvas.height = ch
 }
 
 onMounted(() => {
-  if (isReduced.value || !articleRef.value || !imgRef.value) return
-
-  // Parallax: image scrolls slightly slower than container (depth effect)
-  ctx = gsap.context(() => {
-    gsap.to(imgRef.value!, {
-      yPercent: -12,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: articleRef.value,
-        start: 'top bottom',
-        end: 'bottom top',
-        scrub: true,
-      },
-    })
-  }, articleRef.value)
+  if (isReduced.value) return
+  initCanvas()
+  rafId = requestAnimationFrame(drawParticles)
+  window.addEventListener('resize', onResize)
 })
 
 onUnmounted(() => {
-  ctx?.revert()
-  ctx = null
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
+  window.removeEventListener('resize', onResize)
 })
 </script>
 
@@ -52,23 +149,19 @@ onUnmounted(() => {
     class="story-scene"
     :data-index="props.index"
   >
-    <!-- Visual asset -->
-    <div class="scene-asset">
-      <div
-        class="scene-image-skeleton"
-        :class="{ 'is-hidden': imageLoaded }"
-        aria-hidden="true"
-      ></div>
-      <img
-        ref="imgRef"
-        :src="scene.imageSrc"
-        :alt="scene.imageAlt"
-        width="900"
-        height="1200"
-        loading="lazy"
-        class="scene-image"
-        :class="{ 'is-loaded': imageLoaded }"
-        @load="onImgLoad"
+    <!-- Visual panel — replaces image, uses animated gradient + particles -->
+    <div
+      class="scene-visual"
+      :style="{
+        '--grad-from': config.gradientFrom,
+        '--grad-to': config.gradientTo,
+      }"
+      aria-hidden="true"
+    >
+      <canvas
+        v-if="!isReduced"
+        ref="canvasRef"
+        class="scene-particle-canvas"
       />
     </div>
 
@@ -96,52 +189,55 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-/* ─── Asset ─────────────────────────────────────── */
-.scene-asset {
+/* ─── Visual Panel ──────────────────────────────── */
+.scene-visual {
   position: relative;
   overflow: hidden;
+  /* Animated gradient using CSS custom properties set via :style */
+  background: linear-gradient(145deg, var(--grad-from), var(--grad-to));
+  background-size: 200% 200%;
+  animation: scene-grad-shift 8s ease-in-out infinite alternate;
 }
 
-.scene-image-skeleton {
+@keyframes scene-grad-shift {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+/* Subtle radial overlay for depth */
+.scene-visual::before {
+  content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    110deg,
-    hsl(225 38% 11%) 0%,
-    hsl(225 38% 14%) 40%,
-    hsl(225 38% 11%) 80%
+  background: radial-gradient(
+    ellipse 70% 70% at 50% 40%,
+    hsl(350 65% 30% / 0.12) 0%,
+    transparent 70%
   );
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
-  z-index: 1;
-  transition: opacity 0.5s ease;
-}
-
-.scene-image-skeleton.is-hidden {
-  opacity: 0;
   pointer-events: none;
+  z-index: 1;
 }
 
-@keyframes skeleton-shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* Extra scale to give parallax room to move without white edges */
-.scene-image {
+/* Vignette at bottom to blend into content */
+.scene-visual::after {
+  content: '';
   position: absolute;
-  inset: -8% 0;
-  width: 100%;
-  height: 116%;
-  object-fit: cover;
-  display: block;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: linear-gradient(to bottom, transparent, var(--color-midnight-900));
+  pointer-events: none;
   z-index: 2;
-  opacity: 0;
-  transition: opacity 0.6s ease;
 }
 
-.scene-image.is-loaded {
-  opacity: 1;
+.scene-particle-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
 }
 
 /* ─── Copy ──────────────────────────────────────── */
@@ -153,7 +249,7 @@ onUnmounted(() => {
   gap: 1.25rem;
 }
 
-/* Scene number: small dim counter in corner */
+/* Scene number: small dim counter */
 .scene-number {
   font-family: var(--font-body);
   font-size: var(--text-xs);
@@ -194,14 +290,9 @@ onUnmounted(() => {
     min-height: 100dvh;
   }
 
-  .scene-asset {
+  .scene-visual {
     height: 55vw;
     min-height: 220px;
-  }
-
-  .scene-image {
-    inset: 0;
-    height: 100%;
   }
 
   .scene-copy {
@@ -216,14 +307,8 @@ onUnmounted(() => {
 
 /* ─── Reduced Motion ────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .scene-image-skeleton {
+  .scene-visual {
     animation: none;
-    opacity: 0;
-  }
-  .scene-image {
-    opacity: 1;
-    inset: 0;
-    height: 100%;
   }
   .scene-text {
     opacity: 1 !important;
