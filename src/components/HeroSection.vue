@@ -213,15 +213,15 @@ onMounted(() => {
 
 .hero-headline {
   font-family: var(--font-display);
-  /* Bigger — creates the visual center */
-  font-size: clamp(3.5rem, 8vw, 7rem);
+  font-size: clamp(2.8rem, 6vw, 5.5rem);
   font-weight: 300;
-  line-height: 0.95;
+  line-height: 1.0;
   letter-spacing: var(--tracking-tight);
   color: var(--color-ivory);
   overflow: visible;
   padding-bottom: 0.25rem;
-  /* Always visible — shimmer is additive, not required for readability */
+  word-break: keep-all;
+  overflow-wrap: normal;
   background: linear-gradient(
     105deg,
     var(--color-ivory) 0%,
@@ -356,7 +356,7 @@ onMounted(() => {
   .hero-text { padding-right: 0; flex: 0 0 auto; gap: 1rem; }
   .hero-eyebrow { font-size: 0.65rem; letter-spacing: 0.1em; }
   .hero-headline {
-    font-size: clamp(2.5rem, 10vw, 3.5rem);
+    font-size: clamp(2rem, 8vw, 3rem);
     line-height: 1.0;
     word-break: keep-all;
   }
