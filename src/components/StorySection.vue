@@ -97,25 +97,27 @@ useStoryScrollEngine(sectionRef, sceneRefs)
 }
 
 .story-dot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background-color: var(--color-ivory);
   opacity: 0.3;
-  border: none;
+  border: 1px solid transparent;
   padding: 0;
   cursor: pointer;
-  transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .story-dot--active {
   opacity: 1;
-  transform: scale(1.6);
+  transform: scale(1.8);
   background-color: var(--color-crimson-light);
+  box-shadow: 0 0 10px var(--color-glow-crimson);
 }
 
 .story-dot:hover:not(.story-dot--active) {
-  opacity: 0.6;
+  opacity: 0.7;
+  transform: scale(1.2);
 }
 
 /* Dots fade in/out transition */

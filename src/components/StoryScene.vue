@@ -9,6 +9,7 @@ const props = defineProps<{
 }>()
 
 const { isReduced } = useReducedMotion()
+const articleRef = ref<HTMLElement>()
 const canvasRef = ref<HTMLCanvasElement>()
 
 // ─── Scene configs ────────────────────────────────
@@ -158,6 +159,15 @@ onUnmounted(() => {
       }"
       aria-hidden="true"
     >
+      <img
+        v-if="scene.imageSrc"
+        :src="scene.imageSrc"
+        :alt="scene.imageAlt"
+        class="scene-image"
+      />
+      <!-- Texture overlay -->
+      <div class="scene-texture"></div>
+
       <canvas
         v-if="!isReduced"
         ref="canvasRef"
@@ -185,7 +195,7 @@ onUnmounted(() => {
   grid-template-columns: 1fr 1fr;
   height: 100svh;
   height: 100dvh;
-  background-color: var(--color-midnight-900);
+  background-color: var(--color-midnight-950);
   overflow: hidden;
 }
 
@@ -196,7 +206,26 @@ onUnmounted(() => {
   /* Animated gradient using CSS custom properties set via :style */
   background: linear-gradient(145deg, var(--grad-from), var(--grad-to));
   background-size: 200% 200%;
-  animation: scene-grad-shift 8s ease-in-out infinite alternate;
+  animation: scene-grad-shift 10s ease-in-out infinite alternate;
+}
+
+.scene-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.4;
+  mix-blend-mode: luminosity;
+  transition: opacity 0.5s ease;
+}
+
+.scene-texture {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
 }
 
 @keyframes scene-grad-shift {
@@ -211,11 +240,11 @@ onUnmounted(() => {
   inset: 0;
   background: radial-gradient(
     ellipse 70% 70% at 50% 40%,
-    hsl(350 65% 30% / 0.12) 0%,
+    hsla(350, 65%, 30%, 0.15) 0%,
     transparent 70%
   );
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
 }
 
 /* Vignette at bottom to blend into content */
@@ -225,8 +254,8 @@ onUnmounted(() => {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 30%;
-  background: linear-gradient(to bottom, transparent, var(--color-midnight-900));
+  height: 40%;
+  background: linear-gradient(to bottom, transparent, var(--color-midnight-950));
   pointer-events: none;
   z-index: 2;
 }
@@ -246,7 +275,8 @@ onUnmounted(() => {
   flex-direction: column;
   justify-content: center;
   padding: var(--section-pad-y) var(--section-pad-x);
-  gap: 1.25rem;
+  gap: 1.5rem;
+  background-color: var(--color-midnight-950);
 }
 
 /* Scene number: small dim counter */
@@ -254,17 +284,18 @@ onUnmounted(() => {
   font-family: var(--font-body);
   font-size: var(--text-xs);
   font-weight: 500;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.3em;
   color: var(--color-crimson-light);
-  opacity: 0.7;
+  opacity: 0.8;
+  text-transform: uppercase;
 }
 
 .scene-text {
   font-family: var(--font-display);
-  font-size: clamp(var(--text-xl), 2.5vw, var(--text-4xl));
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
   font-weight: 300;
   font-style: italic;
-  line-height: var(--leading-snug);
+  line-height: 1.3;
   letter-spacing: var(--tracking-tight);
   color: var(--color-ivory);
   padding-bottom: 0.25rem;
@@ -273,10 +304,10 @@ onUnmounted(() => {
 /* ─── Tablet ────────────────────────────────────── */
 @media (min-width: 768px) and (max-width: 1024px) {
   .scene-copy {
-    padding: var(--section-pad-y) clamp(1.5rem, 4vw, var(--section-pad-x));
+    padding: var(--section-pad-y) clamp(2rem, 6vw, var(--section-pad-x));
   }
   .scene-text {
-    font-size: clamp(var(--text-xl), 3vw, var(--text-2xl));
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
   }
 }
 
@@ -284,24 +315,25 @@ onUnmounted(() => {
 @media (max-width: 767px) {
   .story-scene {
     grid-template-columns: 1fr;
-    grid-template-rows: 55vw 1fr;
+    grid-template-rows: 60vw 1fr;
     height: auto;
     min-height: 100svh;
     min-height: 100dvh;
   }
 
   .scene-visual {
-    height: 55vw;
-    min-height: 220px;
+    height: 60vw;
+    min-height: 280px;
   }
 
   .scene-copy {
-    padding: 2rem var(--section-pad-x-narrow);
+    padding: 3rem var(--section-pad-x-mobile);
     justify-content: flex-start;
+    min-height: 40vh;
   }
 
   .scene-text {
-    font-size: var(--text-xl);
+    font-size: 1.5rem;
   }
 }
 

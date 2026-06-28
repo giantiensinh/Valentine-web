@@ -69,39 +69,41 @@ function scrollToClosing() {
 
 /* Semi-opaque once hero has scrolled out of view */
 .navbar--scrolled {
-  background-color: hsla(225, 42%, 8%, 0.85); /* opacity 0.85 < 0.9 ✓ */
-  backdrop-filter: blur(8px);
+  background-color: hsla(225, 42%, 6%, 0.85); /* use midnight-950 equivalent */
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* ─── Logo ────────────────────────────────────── */
 .navbar-logo {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   color: var(--color-ivory);
   text-decoration: none;
   white-space: nowrap;
 }
 
 .navbar-logo-mark {
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   color: var(--color-crimson-light);
   line-height: 1;
   display: inline-block;
   animation: heartbeat 2.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px var(--color-glow-crimson));
 }
 
 @keyframes heartbeat {
   0%, 100% { transform: scale(1); }
-  14%       { transform: scale(1.25); }
+  14%       { transform: scale(1.3); }
   28%       { transform: scale(1); }
-  42%       { transform: scale(1.18); }
+  42%       { transform: scale(1.2); }
   56%       { transform: scale(1); }
 }
 
 .navbar-logo-text {
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
   font-weight: 400;
   letter-spacing: var(--tracking-normal);
 }
@@ -111,24 +113,24 @@ function scrollToClosing() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 1.5rem;
+  padding: 0.6rem 1.75rem;
   border: 1px solid var(--color-crimson);
   border-radius: 0; /* all-sharp per Req 2.6 */
   background: transparent;
   color: var(--color-ivory);
   font-family: var(--font-body);
-  font-size: var(--text-xs);
+  font-size: 0.7rem;
   font-weight: 500;
-  letter-spacing: var(--tracking-wide);
+  letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .navbar-cta:hover {
   background-color: var(--color-crimson);
-  color: var(--color-ivory);
+  box-shadow: 0 0 15px var(--color-glow-crimson);
 }
 
 .navbar-cta:active {
@@ -138,12 +140,17 @@ function scrollToClosing() {
 /* ─── Responsive ──────────────────────────────── */
 @media (max-width: 767px) {
   .navbar {
-    height: 60px;
-    padding-inline: var(--section-pad-x-narrow);
+    height: 64px;
+    padding-inline: var(--section-pad-x-mobile);
   }
 
   .navbar-logo-text {
-    font-size: var(--text-base);
+    font-size: var(--text-lg);
+  }
+
+  .navbar-cta {
+    padding: 0.5rem 1rem;
+    font-size: 0.65rem;
   }
 }
 </style>

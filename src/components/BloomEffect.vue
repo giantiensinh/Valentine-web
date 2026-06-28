@@ -4,7 +4,7 @@ import { gsap } from 'gsap'
 
 const props = defineProps<{
   play: boolean
-  reduced: boolean
+  isReduced: boolean
 }>()
 
 const hasPlayed = ref(false)
@@ -14,7 +14,7 @@ const svgRef = ref<SVGSVGElement>()
  * Animates all petal paths by drawing their strokes from 0 to full length.
  * Guards idempotency via hasPlayed — fires at most once per session.
  */
-function animateBloom(reduced: boolean): void {
+function animateBloom(isReduced: boolean): void {
   if (hasPlayed.value) return
   hasPlayed.value = true
 
@@ -23,7 +23,7 @@ function animateBloom(reduced: boolean): void {
     svgRef.value.querySelectorAll<SVGPathElement>('.petal-path')
   )
 
-  if (reduced) {
+  if (isReduced) {
     // Reduced motion: set final state immediately in one frame
     paths.forEach((p) => {
       const len = p.getTotalLength()
@@ -70,7 +70,7 @@ function animateBloom(reduced: boolean): void {
 watch(
   () => props.play,
   (val) => {
-    if (val) animateBloom(props.reduced)
+    if (val) animateBloom(props.isReduced)
   },
   { immediate: true }
 )

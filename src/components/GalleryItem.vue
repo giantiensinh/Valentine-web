@@ -275,19 +275,20 @@ function onMouseLeave() {
   background: rgba(10, 8, 20, 0.7);
   backdrop-filter: blur(28px) saturate(1.6);
   -webkit-backdrop-filter: blur(28px) saturate(1.6);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow:
-    0 0 60px hsl(350 65% 42% / 0.2),
+    0 0 60px hsla(350, 65%, 42%, 0.15),
     0 8px 40px rgba(0,0,0,0.5),
-    inset 0 1px 0 rgba(255,255,255,0.08);
-  transition: box-shadow 0.4s ease;
+    inset 0 1px 0 rgba(255,255,255,0.05);
+  transition: box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
 }
 
 .gallery-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
   box-shadow:
-    0 0 100px hsl(350 65% 55% / 0.4),
+    0 0 100px var(--color-glow-crimson),
     0 20px 60px rgba(0,0,0,0.6),
-    inset 0 1px 0 rgba(255,255,255,0.16);
+    inset 0 1px 0 rgba(255,255,255,0.12);
 }
 
 /* Animated noise texture */

@@ -67,9 +67,13 @@ function generateHeartPoints(count: number, cx: number, cy: number, scale: numbe
         // Only keep if inside heart shape (approximate: check radius relative to outline)
         const px = cx + hx * scale
         const py = cy + hy * scale
-        // Validate inside heart by comparing distance to nearest outline point
-        const dist2outline = Math.min(...candidates.map(c => (c.x - px) ** 2 + (c.y - py) ** 2))
-        if (dist2outline < (scale * 3) ** 2) {
+        // Validate inside heart using loop thay vì spread (tránh stack overflow)
+        let minDist2 = Infinity
+        for (const c of candidates) {
+            const d2 = (c.x - px) ** 2 + (c.y - py) ** 2
+            if (d2 < minDist2) minDist2 = d2
+        }
+        if (minDist2 < (scale * 3) ** 2) {
             points[count - interior + filled] = { x: px, y: py }
             filled++
         }

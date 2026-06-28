@@ -6,7 +6,7 @@ import { useGalleryScrollEngine } from '../composables/useScrollEngine'
 import { useReducedMotion } from '../composables/useReducedMotion'
 
 // Prop mirrors the pattern used by HeroSection / BloomEffect / ParticleField:
-// App.vue passes :reduced="isReduced" (boolean) down to animated sections.
+// App.vue passes :isReduced="isReduced" (boolean) down to animated sections.
 const props = defineProps<{
   reduced: boolean
 }>()
@@ -64,7 +64,7 @@ useGalleryScrollEngine(sectionRef, trackRef)
 .gallery-section {
   position: relative;
   overflow: hidden;
-  background-color: var(--color-midnight-900);
+  background-color: var(--color-midnight-950);
   height: 100dvh;
 }
 
@@ -76,15 +76,15 @@ useGalleryScrollEngine(sectionRef, trackRef)
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 2.5rem;
+  gap: 4rem;
   padding: 3rem var(--section-pad-x);
   width: max-content;
   height: 100%;
 }
 
 .gallery-track :deep(.gallery-item) {
-  height: 82vh;
-  min-height: 520px;
+  height: 75vh;
+  min-height: 500px;
   flex-shrink: 0;
 }
 
@@ -100,7 +100,7 @@ useGalleryScrollEngine(sectionRef, trackRef)
 .gallery-section--reduced .gallery-track {
   flex-direction: column;
   width: 100%;
-  padding: var(--section-pad-y) var(--section-pad-x-narrow);
+  padding: var(--section-pad-y) var(--section-pad-x-mobile);
 }
 
 .gallery-section--reduced :deep(.gallery-item) {
@@ -121,11 +121,11 @@ useGalleryScrollEngine(sectionRef, trackRef)
  */
 .gallery-hint {
   position: absolute;
-  bottom: 2rem;
+  bottom: 2.5rem;
   right: var(--section-pad-x);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   z-index: var(--z-content);
   pointer-events: none;
   /* Ensure it sits above the track */
@@ -136,22 +136,22 @@ useGalleryScrollEngine(sectionRef, trackRef)
   font-family: var(--font-body);
   font-size: var(--text-xs);
   font-weight: 500;
-  letter-spacing: var(--tracking-wide);
+  letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
   color: var(--color-ivory);
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 .gallery-hint-arrow {
-  font-size: var(--text-base);
+  font-size: var(--text-lg);
   color: var(--color-crimson-light);
-  opacity: 0.7;
-  animation: hint-nudge 1.8s ease-in-out infinite;
+  opacity: 0.8;
+  animation: hint-nudge 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
 @keyframes hint-nudge {
   0%, 100% { transform: translateX(0); }
-  50%       { transform: translateX(6px); }
+  50%       { transform: translateX(10px); }
 }
 
 /*
@@ -161,13 +161,15 @@ useGalleryScrollEngine(sectionRef, trackRef)
 @media (max-width: 767px) {
   .gallery-section {
     overflow-x: hidden;
+    height: auto;
+    min-height: 100vh;
   }
 
   .gallery-track {
     flex-direction: column;
     width: 100%;
-    padding: 2rem var(--section-pad-x-narrow);
-    gap: 1.5rem;
+    padding: 4rem var(--section-pad-x-mobile);
+    gap: 3rem;
   }
 
   .gallery-track :deep(.gallery-item) {

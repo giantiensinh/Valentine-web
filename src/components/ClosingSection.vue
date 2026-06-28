@@ -12,7 +12,7 @@ const closingTextRef = ref<HTMLElement>()
 const typingRef = ref<HTMLElement>()
 const canvasRef = ref<HTMLCanvasElement>()
 const confettiRef = ref<InstanceType<typeof ConfettiOverlay>>()
-const revealWordRefs = ref<HTMLElement[]>()
+const revealWordRefs: HTMLElement[] = []
 const hasFadedIn = ref(false)
 const hasTyped = ref(false)
 const typingDone = ref(false)
@@ -193,7 +193,7 @@ onUnmounted(() => { cleanupAurora?.() })
         <span
           v-for="(word, i) in REVEAL_WORDS"
           :key="i"
-          :ref="(el) => { if (el) (revealWordRefs as HTMLElement[])[i] = el as HTMLElement }"
+          :ref="(el) => { if (el) revealWordRefs.value[i] = el as HTMLElement }"
           class="reveal-word"
         >{{ word }}</span>
       </h2>
@@ -247,7 +247,7 @@ onUnmounted(() => { cleanupAurora?.() })
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  background-color: var(--color-midnight-900);
+  background-color: var(--color-midnight-950);
   padding-inline: var(--section-pad-x);
   padding-block: var(--section-pad-y);
   overflow: hidden;
@@ -260,6 +260,7 @@ onUnmounted(() => { cleanupAurora?.() })
   height: 100%;
   pointer-events: none;
   z-index: 0;
+  opacity: 0.6;
 }
 
 .closing-content {
@@ -270,7 +271,7 @@ onUnmounted(() => { cleanupAurora?.() })
   margin-inline: auto;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 2.5rem;
   align-items: flex-start;
 }
 
@@ -280,7 +281,7 @@ onUnmounted(() => { cleanupAurora?.() })
   flex-wrap: wrap;
   gap: 0.4em;
   font-family: var(--font-display);
-  font-size: clamp(2rem, 5vw, 4.5rem);
+  font-size: clamp(2.5rem, 6vw, 5.5rem);
   font-weight: 300;
   font-style: italic;
   line-height: 1.1;
@@ -298,10 +299,10 @@ onUnmounted(() => { cleanupAurora?.() })
 /* ─── Heart Orbit ─────────────────────────────── */
 .heart-orbit {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   align-self: flex-start;
-  margin-left: 1rem;
+  margin-left: 1.5rem;
 }
 
 .orbit-ring {
@@ -314,22 +315,22 @@ onUnmounted(() => { cleanupAurora?.() })
   position: absolute;
   top: 50%;
   left: 50%;
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--color-crimson-light);
   /* Each heart starts at its angular offset, then orbits */
   transform-origin: 0 0;
   /* Translate to orbit radius, then rotate around center */
-  animation: orbit-spin 4s linear infinite;
-  animation-delay: calc(var(--orbit-delay) / 360 * -4s);
-  filter: drop-shadow(0 0 4px hsl(350 65% 55% / 0.8));
+  animation: orbit-spin 5s linear infinite;
+  animation-delay: calc(var(--orbit-delay) / 360 * -5s);
+  filter: drop-shadow(0 0 6px var(--color-glow-crimson));
 }
 
 @keyframes orbit-spin {
   from {
-    transform: translate(-50%, -50%) rotate(var(--orbit-delay)) translateX(52px) rotate(calc(-1 * var(--orbit-delay)));
+    transform: translate(-50%, -50%) rotate(var(--orbit-delay)) translateX(60px) rotate(calc(-1 * var(--orbit-delay)));
   }
   to {
-    transform: translate(-50%, -50%) rotate(calc(var(--orbit-delay) + 360deg)) translateX(52px) rotate(calc(-1 * (var(--orbit-delay) + 360deg)));
+    transform: translate(-50%, -50%) rotate(calc(var(--orbit-delay) + 360deg)) translateX(60px) rotate(calc(-1 * (var(--orbit-delay) + 360deg)));
   }
 }
 
@@ -338,15 +339,15 @@ onUnmounted(() => { cleanupAurora?.() })
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
   color: var(--color-ivory);
-  opacity: 0.7;
-  letter-spacing: var(--tracking-wide);
+  opacity: 0.8;
+  letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
 }
 
 /* Typing animation text */
 .closing-typing {
   font-family: var(--font-display);
-  font-size: clamp(1.4rem, 3vw, 2.5rem);
+  font-size: clamp(1.5rem, 4vw, 3rem);
   font-weight: 300;
   font-style: italic;
   line-height: 1.3;
@@ -371,7 +372,7 @@ onUnmounted(() => { cleanupAurora?.() })
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem 3rem;
+  padding: 1.25rem 4rem;
   border: 1px solid var(--color-crimson);
   border-radius: 0;
   background: transparent;
@@ -379,16 +380,17 @@ onUnmounted(() => { cleanupAurora?.() })
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: 500;
-  letter-spacing: var(--tracking-wide);
+  letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
   cursor: pointer;
   overflow: hidden;
   white-space: nowrap;
-  transition: box-shadow 0.25s ease;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .closing-cta:hover {
-  box-shadow: 0 0 24px hsl(350 65% 42% / 0.4);
+  box-shadow: 0 0 30px var(--color-glow-crimson);
+  border-color: var(--color-crimson-light);
 }
 
 .cta-fill {
@@ -405,7 +407,7 @@ onUnmounted(() => { cleanupAurora?.() })
   z-index: 1;
 }
 
-.closing-cta:active { transform: scale(0.97); }
+.closing-cta:active { transform: scale(0.96); }
 
 .site-footer {
   position: absolute;
@@ -418,22 +420,22 @@ onUnmounted(() => { cleanupAurora?.() })
   font-family: var(--font-body);
   font-size: var(--text-xs);
   color: var(--color-ivory);
-  opacity: 0.4;
+  opacity: 0.5;
   letter-spacing: var(--tracking-normal);
 }
 
 @media (min-width: 768px) and (max-width: 1024px) {
-  .closing-section { padding-inline: clamp(2rem, 5vw, var(--section-pad-x)); }
+  .closing-section { padding-inline: clamp(2rem, 6vw, var(--section-pad-x)); }
 }
 
 @media (max-width: 767px) {
-  .closing-section { padding-inline: var(--section-pad-x-narrow); padding-block: 4rem; }
-  .closing-content { gap: 1.5rem; }
-  .closing-cta { width: 100%; justify-content: center; }
-  .site-footer { left: var(--section-pad-x-narrow); }
-  .closing-typing { font-size: clamp(1.1rem, 5vw, 1.6rem); }
-  .reveal-heading { font-size: clamp(1.5rem, 7vw, 2.5rem); }
-  .heart-orbit { width: 80px; height: 80px; }
+  .closing-section { padding-inline: var(--section-pad-x-mobile); padding-block: 5rem; }
+  .closing-content { gap: 2rem; }
+  .closing-cta { width: 100%; justify-content: center; padding-inline: 1rem; }
+  .site-footer { left: var(--section-pad-x-mobile); }
+  .closing-typing { font-size: clamp(1.2rem, 6vw, 1.8rem); }
+  .reveal-heading { font-size: clamp(1.8rem, 9vw, 2.8rem); }
+  .heart-orbit { width: 100px; height: 100px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

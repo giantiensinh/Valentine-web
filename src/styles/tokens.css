@@ -1,6 +1,7 @@
 /* src/styles/tokens.css */
 :root {
   /* Midnight Base (hue 225, sat 42%, light 8%) */
+  --color-midnight-950: hsl(225 42% 6%);
   --color-midnight-900: hsl(225 42% 8%);
   --color-midnight-800: hsl(225 38% 11%);
   --color-midnight-700: hsl(225 35% 14%);
@@ -11,8 +12,12 @@
 
   /* Crimson Accent (hue 350, sat 65%, light 42%) */
   --color-crimson: hsl(350 65% 42%);
-  --color-crimson-light: hsl(350 65% 55%);
+  --color-crimson-light: hsl(350 75% 58%);
   --color-crimson-dark: hsl(350 65% 30%);
+
+  /* Glow effects */
+  --color-glow-crimson: hsla(350, 65%, 42%, 0.3);
+  --color-glow-ivory: hsla(48, 22%, 92%, 0.15);
 
   /* Shadow: mixed crimson hue, 50% opacity */
   --shadow-base: hsla(350 40% 8% / 0.55);
@@ -27,30 +32,39 @@
   --text-lg: 1.125rem;
   --text-xl: 1.25rem;
   --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
   --text-4xl: 2.25rem;
   --text-5xl: 3rem;
+  --text-6xl: 3.75rem;
   --text-7xl: 4.5rem;
+  --text-8xl: 6rem;
   --text-9xl: 8rem;
 
-  --leading-tight: 0.95;
-  --leading-snug: 1.1;
-  --leading-normal: 1.5;
+  --leading-tight: 1.1;
+  --leading-snug: 1.2;
+  --leading-normal: 1.6;
 
-  --tracking-tight: -0.04em;
+  --tracking-tight: -0.02em;
   --tracking-normal: 0em;
-  --tracking-wide: 0.12em;
+  --tracking-wide: 0.05em;
+  --tracking-wider: 0.1em;
 
   /* Spacing */
   --section-pad-x: 8vw;
-  --section-pad-x-narrow: 1rem;
+  --section-pad-x-mobile: 1.25rem;
   --section-pad-y: 6rem;
-  --content-max-w: 1400px;
+  --section-pad-y-mobile: 4rem;
+  --content-max-w: 1200px;
 
   /* Z-index */
   --z-particles: 0;
   --z-content: 10;
   --z-nav: 50;
   --z-modal: 100;
+
+  /* Extended colors */
+  --color-midnight-950: hsl(225 48% 4%);
+  --color-glow-crimson: hsl(350 65% 42% / 0.35);
 }
 
 /* ─── Global layered background gradient ──────────── */

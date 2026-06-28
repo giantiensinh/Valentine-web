@@ -83,11 +83,11 @@ onMounted(() => {
       :onBloomTrigger="onBloomTrigger"
     >
       <template #particles>
-        <ParticleField :reduced="isReduced" />
+        <ParticleField :isReduced="isReduced" />
       </template>
     </HeroSection>
 
-    <BloomEffect :play="bloomPlaying" :reduced="isReduced" />
+    <BloomEffect :play="bloomPlaying" :isReduced="isReduced" />
     <StorySection :isReduced="isReduced" />
     <GallerySection :reduced="isReduced" />
     <MessageSection :isReduced="isReduced" />

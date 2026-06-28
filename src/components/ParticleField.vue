@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useParticleField } from '../composables/useParticleField'
 
 defineProps<{
-  reduced: boolean
+  isReduced: boolean
 }>()
 
 const canvasRef = ref<HTMLCanvasElement>()
@@ -15,7 +15,7 @@ useParticleField(canvasRef)
 <template>
   <!-- Not mounted at all when reduced motion is preferred -->
   <canvas
-    v-if="!reduced"
+    v-if="!isReduced"
     ref="canvasRef"
     class="particle-canvas"
     aria-hidden="true"
